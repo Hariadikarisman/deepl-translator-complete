@@ -101,7 +101,7 @@ const GEMINI_FALLBACK_LANGUAGES = {
   HI: { name: 'Hindi', romanize: true }
 };
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.5-flash';
 
 // Nama lengkap tiap kode bahasa yang tersedia di app, dipakai untuk menyusun
 // prompt Gemini yang lebih jelas (mis. "from Indonesian" bukan cuma "from ID").
