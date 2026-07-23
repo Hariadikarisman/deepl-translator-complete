@@ -140,7 +140,10 @@ async function translateWithGemini(text, sourceLangCode, targetLangCode) {
     },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.2 }
+      generationConfig: {
+        temperature: 0.2,
+        thinkingConfig: { thinkingLevel: "low" }
+      }
     })
   });
 
