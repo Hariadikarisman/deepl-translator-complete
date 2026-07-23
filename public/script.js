@@ -75,6 +75,7 @@
   const speakSourceBtn = document.getElementById('speakSourceBtn');
   const speakTargetBtn = document.getElementById('speakTargetBtn');
   const copySourceBtn = document.getElementById('copySourceBtn');
+  const cameraTranslateBtn = document.getElementById('cameraTranslateBtn');
   const copyTargetBtn = document.getElementById('copyTargetBtn');
   
   // Modal Overlays
@@ -290,6 +291,113 @@
       updateRomanizationDisplay('');
     } finally {
       isTranslating = false;
+      updateFavoriteBtnState();
+    }
+  }
+
+  // ---- TRANSLATE DARI FOTO (KAMERA / GALERI) ----
+  // Memakai native Camera plugin Capacitor via window.Capacitor.Plugins.Camera
+  // (tidak perlu import npm karena app ini tidak pakai bundler). Native plugin-nya
+  // sendiri ditambahkan lewat "npx cap sync" setelah @capacitor/camera di-install.
+  async function handleCameraTranslate() {
+    const CameraPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+    if (!CameraPlugin) {
+      showToast('Fitur kamera hanya tersedia di aplikasi (bukan browser).');
+      return;
+    }
+
+    let photo;
+    try {
+      photo = await CameraPlugin.getPhoto({
+        quality: 70,
+        allowEditing: false,
+        resultType: 'base64',
+        source: 'PROMPT', // Munculkan pilihan native: "Ambil Foto" atau "Pilih dari Galeri"
+        width: 1600, // Batasi ukuran supaya payload upload tidak terlalu besar
+        correctOrientation: true,
+        promptLabelHeader: 'Translate dari Foto',
+        promptLabelPhoto: 'Pilih dari Galeri',
+        promptLabelPicture: 'Ambil Foto'
+      });
+    } catch (err) {
+      const msg = (err && err.message) ? err.message.toLowerCase() : '';
+      if (msg.indexOf('cancel') === -1) {
+        showToast('Gagal mengambil foto.');
+      }
+      return;
+    }
+
+    if (!photo || !photo.base64String) {
+      showToast('Gagal memproses foto.');
+      return;
+    }
+
+    cameraTranslateBtn.classList.add('is-processing');
+    targetTextEl.classList.remove('translation-placeholder');
+    targetTextEl.textContent = 'Membaca teks dari foto...';
+    adjustFontSize(targetTextEl, 'Membaca teks dari foto...');
+    updateRomanizationDisplay('');
+
+    try {
+      const response = await fetch(getApiUrl('/api/translate-image'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: photo.base64String,
+          mimeType: 'image/' + (photo.format || 'jpeg'),
+          targetLang: targetLang
+        })
+      });
+
+      const rawText = await response.text();
+      let data = null;
+      try {
+        data = JSON.parse(rawText);
+      } catch (jsonErr) {
+        throw new Error('Server returned invalid response: ' + rawText.substring(0, 150) + ' (Status: ' + response.status + ')');
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Server Error (' + response.status + '): ' + rawText.substring(0, 150));
+      }
+
+      if (!data.extractedText || !data.extractedText.trim()) {
+        showToast('Tidak ada teks yang terbaca dari foto ini. Coba foto yang lebih jelas.');
+        targetTextEl.textContent = 'Hasil Terjemahan';
+        targetTextEl.classList.add('translation-placeholder');
+        adjustFontSize(targetTextEl, 'Hasil Terjemahan');
+        return;
+      }
+
+      sourceTextEl.value = data.extractedText;
+      adjustFontSize(sourceTextEl, data.extractedText);
+
+      targetTextEl.textContent = data.translation || '';
+      adjustFontSize(targetTextEl, data.translation || '');
+      updateRomanizationDisplay(data.romanization || '');
+
+      const newItem = {
+        id: Date.now(),
+        source: data.extractedText,
+        translated: data.translation,
+        romanization: data.romanization || '',
+        srcLang: sourceLang,
+        tgtLang: targetLang,
+        timestamp: new Date().toISOString(),
+        favorite: false
+      };
+      historyList.unshift(newItem);
+      saveHistoryToStorage();
+
+      showToast('Teks dari foto berhasil diterjemahkan!');
+    } catch (e) {
+      console.error('Camera translate error:', e);
+      showToast('Gagal menerjemahkan foto: ' + (e.message || 'Terjadi kesalahan.'));
+      targetTextEl.textContent = 'Hasil Terjemahan';
+      targetTextEl.classList.add('translation-placeholder');
+      adjustFontSize(targetTextEl, 'Hasil Terjemahan');
+    } finally {
+      cameraTranslateBtn.classList.remove('is-processing');
       updateFavoriteBtnState();
     }
   }
@@ -922,6 +1030,7 @@
   // History and favorite workspace events
   swapBtn.addEventListener('click', handleLanguageSwap);
   favoriteBtn.addEventListener('click', handleFavoriteToggle);
+  cameraTranslateBtn.addEventListener('click', handleCameraTranslate);
 
   // History overlay navigation
   historyBtn.addEventListener('click', () => {

@@ -290,6 +290,21 @@ html, body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* State loading saat tombol kamera sedang memproses foto (OCR + translate) */
+.control-btn.is-processing {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.control-btn.is-processing svg {
+  animation: camera-processing-spin 0.9s linear infinite;
+}
+
+@keyframes camera-processing-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .control-group-right {
   display: flex;
   align-items: center;

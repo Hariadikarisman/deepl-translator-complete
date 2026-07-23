@@ -18,7 +18,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+// Limit dinaikkan ke 8mb supaya bisa menampung payload gambar base64 dari fitur translate foto
+app.use(express.json({ limit: "8mb" }));
 
 // Batasi request per IP supaya biaya DeepL tidak jebol kalau ada yang spam/scraping.
 // 30 request/menit per IP sudah lebih dari cukup untuk pemakaian normal 1 aplikasi.
@@ -28,6 +29,16 @@ const translateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Terlalu banyak permintaan. Coba lagi sebentar lagi." }
+});
+
+// Rate limit lebih ketat untuk translate dari foto — payload lebih besar
+// dan biaya prosesnya (Gemini vision) lebih mahal dibanding translate teks biasa.
+const imageTranslateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Terlalu banyak permintaan translate foto. Coba lagi sebentar lagi." }
 });
 
 let translator = null;
@@ -162,6 +173,91 @@ async function translateWithGemini(text, sourceLangCode, targetLangCode) {
   return translated.trim();
 }
 
+// Helper terpadu: pilih cara romanisasi yang tepat untuk kode bahasa target manapun
+// (dipakai baik oleh jalur DeepL maupun fallback Gemini/translate-foto)
+async function getRomanizationForTarget(text, targetUpperCode) {
+  const fallbackInfo = GEMINI_FALLBACK_LANGUAGES[targetUpperCode];
+  if (fallbackInfo) {
+    if (!fallbackInfo.romanize) return "";
+    try {
+      return transliterate(text);
+    } catch (err) {
+      console.error("⚠️ Romanisasi gagal, dilewati:", err.message);
+      return "";
+    }
+  }
+  return getRomanization(text, normalizeTargetLang(targetUpperCode));
+}
+
+// ==========================================================
+// TRANSLATE DARI FOTO — baca teks dari gambar (OCR) sekaligus translate
+// dalam satu panggilan Gemini vision. Tidak perlu OCR service terpisah.
+// ==========================================================
+async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY belum dikonfigurasi (dibutuhkan untuk fitur translate dari foto).");
+  }
+
+  const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
+  const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
+
+  const prompt = `Look at the image carefully and extract all readable text from it, preserving ` +
+    `line breaks where it makes sense. Then translate the extracted text into ${targetName}. ` +
+    `Respond with ONLY valid JSON (no markdown code fences, no extra commentary) in this exact shape: ` +
+    `{"extractedText": "...", "translation": "..."}. ` +
+    `If there is no readable text in the image, respond with {"extractedText": "", "translation": ""}.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mimeType, data: imageBase64 } },
+          { text: prompt }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        thinkingConfig: { thinkingLevel: "low" }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  let rawReply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!rawReply || !rawReply.trim()) {
+    throw new Error("Gemini tidak mengembalikan hasil apapun dari foto ini.");
+  }
+
+  // Kadang model tetap membungkus JSON dengan ```json ... ``` walau sudah diminta tidak.
+  rawReply = rawReply.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(rawReply);
+  } catch (err) {
+    throw new Error("Gagal membaca hasil dari Gemini (format tidak sesuai).");
+  }
+
+  return {
+    extractedText: (parsed.extractedText || '').trim(),
+    translation: (parsed.translation || '').trim()
+  };
+}
+
 // ==========================================================
 // ROMANISASI — mengubah hasil terjemahan non-Latin jadi bacaan Latin
 // ==========================================================
@@ -244,15 +340,7 @@ app.post("/api/translate", translateLimiter, async (req, res) => {
         const translatedText = await translateWithGemini(text, sourceUpper, targetUpper);
         console.log(`✅ Terjemahan Gemini berhasil (${translatedText.length} karakter)`);
 
-        const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetUpper];
-        let romanization = "";
-        if (targetInfo && targetInfo.romanize) {
-          try {
-            romanization = transliterate(translatedText);
-          } catch (err) {
-            console.error("⚠️ Romanisasi Gemini fallback gagal, dilewati:", err.message);
-          }
-        }
+        const romanization = await getRomanizationForTarget(translatedText, targetUpper);
 
         return res.json({ translation: translatedText, romanization });
       } catch (err) {
@@ -317,6 +405,45 @@ app.post("/api/translate", translateLimiter, async (req, res) => {
 
 app.get("/api/test", (req, res) => {
   res.json({ status: "ok" });
+});
+
+// Body untuk gambar base64 bisa beberapa MB — sudah ditampung oleh limit
+// express.json() global yang dinaikkan ke 8mb di atas.
+app.post("/api/translate-image", imageTranslateLimiter, async (req, res) => {
+  try {
+    const { imageBase64, mimeType, targetLang } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ error: "Gambar tidak ditemukan." });
+    }
+    if (!targetLang) {
+      return res.status(400).json({ error: "Target language tidak valid." });
+    }
+
+    const targetUpper = targetLang.toUpperCase();
+    const safeMimeType = mimeType || "image/jpeg";
+
+    console.log(`📷 Membaca & menerjemahkan foto ke ${targetUpper}...`);
+
+    const { extractedText, translation } = await translateImageWithGemini(
+      imageBase64,
+      safeMimeType,
+      targetUpper
+    );
+
+    if (!extractedText) {
+      return res.json({ extractedText: "", translation: "", romanization: "" });
+    }
+
+    console.log(`✅ Teks dari foto terbaca (${extractedText.length} karakter), diterjemahkan (${translation.length} karakter)`);
+
+    const romanization = await getRomanizationForTarget(translation, targetUpper);
+
+    res.json({ extractedText, translation, romanization });
+  } catch (error) {
+    console.error("❌ Translate-image error:", error);
+    res.status(500).json({ error: error.message || "Gagal memproses foto." });
+  }
 });
 
 app.listen(PORT, "0.0.0.0", () => {
