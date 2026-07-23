@@ -1,0 +1,8 @@
+{
+  "name": "HaKa Translator",
+  "short_name": "HaKa",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#081126",
+  "theme_color": "#7c5cff"
+}

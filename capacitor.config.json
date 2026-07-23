@@ -1,0 +1,17 @@
+{
+  "appId": "com.haka.translator",
+  "appName": "HaKa Translator AI",
+  "webDir": "public",
+  "backgroundColor": "#070b16",
+  "ios": {
+    "scheme": "haka"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true,
+      "backgroundColor": "#ffffff",
+      "showSpinner": false
+    }
+  }
+}

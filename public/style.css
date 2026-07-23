@@ -1,0 +1,939 @@
+/* =====================================================
+   Haka Translator AI - iOS Premium Style Sheet
+   Designed for high-performance mobile and hybrid (iOS WebView) containers
+===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=SF+Mono:wght@400;500&display=swap');
+
+:root {
+  --ios-blue: #007aff;
+  --ios-blue-active: #0056b3;
+  --ios-dark-card: #121214;
+  --ios-light-card: #ffffff;
+  --ios-text-light: #ffffff;
+  --ios-text-dark: #121214;
+  --ios-gray-dim: #1c1c1e;
+  --ios-border-white: rgba(255, 255, 255, 0.15);
+  --ios-border-dark: rgba(0, 0, 0, 0.08);
+  --ios-star-gold: #ffcc00;
+  
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #000000;
+  color: var(--ios-text-light);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App Wrapper */
+.app-container {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #000000;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 420px;
+    height: 92vh;
+    border-radius: 40px;
+    border: 8px solid #2c2c2e;
+    margin: 4vh auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+}
+
+/* ==================== SCREEN SPLIT LAYOUT ==================== */
+.split-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* Source Pane (Top 50%) */
+.pane-source {
+  height: 50%;
+  background-color: var(--ios-blue);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(16px + var(--safe-top));
+  padding-left: calc(20px + var(--safe-left));
+  padding-right: calc(20px + var(--safe-right));
+  padding-bottom: 16px; /* kurangi padding bawah */
+  z-index: 10;
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Target Pane (Bottom 50%) */
+.pane-target {
+  height: 50%;
+  background-color: var(--ios-dark-card);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(10px + var(--safe-top));
+  padding-left: calc(20px + var(--safe-left));
+  padding-right: calc(20px + var(--safe-right));
+  padding-bottom: 16px; /* kurangi padding bawah */
+  z-index: 10;
+  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==================== HEADER BAR ==================== */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 48px;
+  width: 100%;
+  position: relative;
+  z-index: 20;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.4px;
+  text-align: center;
+  flex: 1;
+}
+
+.header-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-btn:active {
+  transform: scale(0.92);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==================== TEXT AREAS & DISPLAY ==================== */
+.content-area {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;   /* atas */
+  justify-content: flex-start; /* kiri */
+  width: 100%;
+  padding: 8px 16px;
+  overflow-y: auto;
+  margin: 0; /* ← HAPUS margin-top dan margin-bottom */
+}
+
+.textarea-source {
+  width: 100%;
+  height: 100%; /* atau flex:1 */
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  color: #ffffff;
+  text-align: left;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.4;
+  padding: 8px 50px 8px 0; /* padding kanan untuk tombol X */
+  caret-color: #ffffff;
+  flex: 1; /* tambahkan agar mengisi */
+}
+
+.textarea-source::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+  text-align: left;
+}
+
+.translation-display {
+  width: 100%;
+  text-align: left;          /* rata kiri */
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.4;
+  color: #ffffff;
+  padding: 8px 0;
+  overflow-y: auto;
+  max-height: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.translation-placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  text-align: left;
+}
+
+/* Wrapper untuk teks hasil terjemahan + romanisasi di bawahnya */
+.target-result-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Teks romanisasi kecil (cara baca) untuk bahasa non-Latin: Korea, Jepang, dll */
+.romanization-display {
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.1px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 4px 0 0 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  display: none; /* disembunyikan sampai ada isinya */
+}
+
+.romanization-display.visible {
+  display: block;
+}
+
+/* Efek aktif untuk tombol favorit di header */
+#favoriteBtn.active {
+  color: #ffcc00 !important;
+  background-color: rgba(255, 204, 0, 0.2) !important;
+}
+
+/* Dynamic font sizes matching the screenshot logic */
+.size-large {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+}
+
+.size-medium {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.size-small {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+
+/* ==================== CONTROL BARS ==================== */
+.control-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 52px;
+  position: relative;
+}
+
+.control-group-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.control-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pane-target .control-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.control-btn:active {
+  transform: scale(0.9);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.control-group-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Selected Language Selector pill */
+.lang-selector-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.lang-selector-pill:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.lang-selector-pill span.chevron {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* ==================== ACTION MICROPHONE BUTTON ==================== */
+.mic-action-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background-color: #ffffff;
+  color: var(--ios-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mic-action-btn:active {
+  transform: scale(0.9);
+}
+
+/* Pulsating visualizer active state (Wave Icon) */
+.mic-action-btn.listening-active {
+  background-color: #ffffff;
+  color: var(--ios-blue);
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+}
+
+/* WAVEFORM ANIMATION INSIDE MICROPHONE BUTTON */
+.waveform-container {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 24px;
+  height: 24px;
+}
+
+.mic-action-btn.listening-active .waveform-container {
+  display: flex;
+}
+
+.mic-action-btn.listening-active svg.mic-icon-svg {
+  display: none;
+}
+
+.wave-bar {
+  width: 2.5px;
+  height: 6px;
+  background-color: var(--ios-blue);
+  border-radius: 2px;
+  animation: visualizerPulse 1s ease-in-out infinite alternate;
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0.1s; height: 10px; }
+.wave-bar:nth-child(2) { animation-delay: 0.3s; height: 16px; }
+.wave-bar:nth-child(3) { animation-delay: 0.0s; height: 12px; }
+.wave-bar:nth-child(4) { animation-delay: 0.4s; height: 18px; }
+.wave-bar:nth-child(5) { animation-delay: 0.2s; height: 8px; }
+
+@keyframes visualizerPulse {
+  0% {
+    transform: scaleY(0.4);
+  }
+  100% {
+    transform: scaleY(1.4);
+  }
+}
+
+/* Favorite Star button (exclusive to bottom card) */
+.favorite-action-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.favorite-action-btn.active {
+  background-color: rgba(255, 204, 0, 0.15);
+  color: var(--ios-star-gold);
+  border-color: rgba(255, 204, 0, 0.3);
+}
+
+.favorite-action-btn:active {
+  transform: scale(0.9);
+}
+
+/* ==================== CENTER SWAP BUTTON ==================== */
+.center-swap-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  pointer-events: none;
+}
+
+.swap-btn-circle {
+  pointer-events: auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 5px solid #000000;
+  background-color: var(--ios-blue);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.swap-btn-circle:active {
+  transform: scale(0.88);
+  background-color: var(--ios-blue-active);
+}
+
+/* ==================== TRANSLUCENT OVERLAYS & MODALS ==================== */
+.overlay-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0d0d0f;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+}
+
+.overlay-screen.active {
+  transform: translateX(0);
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 64px;
+  padding: 12px 16px 12px 16px;
+  background-color: #121214;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.back-text-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ios-blue);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.overlay-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+  flex: 1;
+}
+
+.overlay-action-btn {
+  background: transparent;
+  border: none;
+  color: #ff453a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+/* ==================== SEGMENTED TABS CONTROLS ==================== */
+.segmented-control-container {
+  padding: 12px 16px;
+  background-color: #121214;
+}
+
+.segmented-control {
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.segment-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.segment-btn.active {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* ==================== SEARCH BAR ==================== */
+.search-bar-container {
+  padding: 8px 16px;
+  background-color: #121214;
+}
+
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.06);
+  padding-left: 36px;
+  padding-right: 36px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.search-icon-svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: none;
+}
+
+.search-clear-btn.visible {
+  display: block;
+}
+
+/* ==================== HISTORY LIST ITEMS ==================== */
+.history-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 80px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-state-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 4px;
+}
+
+.history-card {
+  background-color: #121214;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-card:active {
+  transform: scale(0.98);
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.history-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-card-langs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 4px;
+}
+
+.history-card-langs .arrow {
+  font-size: 8px;
+}
+
+.history-card-source {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-card-translated {
+  font-size: 14px;
+  font-weight: 500;
+  color: #007aff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.history-card-time {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  display: block;
+  margin-top: 6px;
+}
+
+.history-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-card-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.history-card-btn.fav {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.history-card-btn.fav.active {
+  color: var(--ios-star-gold);
+}
+
+.history-card-btn.del {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.history-card-btn.del:hover, .history-card-btn.del:active {
+  color: #ff453a;
+  background-color: rgba(255, 69, 58, 0.08);
+}
+
+/* ==================== BOTTOM SHEET LANGUAGE SHEET ==================== */
+.bottom-sheet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.bottom-sheet.active {
+  display: flex;
+}
+
+.bottom-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 5;
+}
+
+.bottom-sheet-drawer {
+  position: relative;
+  width: 100%;
+  max-height: 75vh;
+  background-color: #121214;
+  border-top-left-radius: 32px;
+  border-top-right-radius: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bottom-sheet.active .bottom-sheet-drawer {
+  transform: translateY(0);
+}
+
+.bottom-sheet-indicator {
+  width: 36px;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2.5px;
+  margin: 10px auto;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 14px 20px;
+  border-b: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.bottom-sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.bottom-sheet-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.bottom-sheet-search {
+  padding: 8px 20px;
+}
+
+.bottom-sheet-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+  margin-bottom: calc(16px + var(--safe-bottom));
+}
+
+.lang-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lang-list-item:active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.lang-list-item.selected {
+  background-color: rgba(0, 122, 255, 0.08);
+}
+
+.lang-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lang-item-flag {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.lang-item-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.lang-list-item.selected .lang-item-name {
+  color: var(--ios-blue);
+}
+
+.lang-item-check {
+  color: var(--ios-blue);
+  display: none;
+}
+
+.lang-list-item.selected .lang-item-check {
+  display: block;
+}
+
+/* ==================== GLOBAL FLOATING TOAST ==================== */
+.global-toast {
+  position: absolute;
+  top: calc(72px + var(--safe-top));
+  left: 16px;
+  right: 16px;
+  background-color: #30d158;
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transform: translateY(-50px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.global-toast.active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.global-toast svg {
+  flex-shrink: 0;
+}
+
+/* Tombol X untuk menghapus teks di source */
+.clear-text-btn {
+  position: absolute;
+  right: 8px;
+  top: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: transparent; /* TANPA BACKGROUND */
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  font-weight: 300;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.2s;
+}
+
+.clear-text-btn.visible {
+  display: flex;
+}
+
+.clear-text-btn:active {
+  opacity: 0.5;
+  transform: scale(0.9);
+}

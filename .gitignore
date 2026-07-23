@@ -1,0 +1,33 @@
+# ==== Secrets — JANGAN PERNAH commit file ini ====
+.env
+.env.local
+.env.*.local
+
+# ==== Node ====
+node_modules/
+npm-debug.log*
+package-lock.json.bak
+
+# ==== macOS ====
+.DS_Store
+**/.DS_Store
+
+# ==== iOS / Xcode / Capacitor ====
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+ios/App/CapApp-SPM/.swiftpm/
+ios/App/build/
+ios/App/DerivedData/
+ios/capacitor-cordova-ios-plugins/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Capacitor auto-sync copy (dibuat ulang otomatis oleh `npx cap sync`)
+ios/App/App/public/
+
+# ==== Backup / file kerja pribadi ====
+*.backup
+*copy*.zip
+*.bak
