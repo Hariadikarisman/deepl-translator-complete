@@ -91,6 +91,75 @@ function normalizeTargetLang(code) {
 }
 
 // ==========================================================
+// FALLBACK GEMINI — untuk bahasa yang TIDAK didukung DeepL sama sekali
+// (Thailand, Vietnam, Hindi). DeepL tetap dipakai untuk semua bahasa lain
+// karena kualitasnya lebih konsisten untuk terjemahan.
+// ==========================================================
+const GEMINI_FALLBACK_LANGUAGES = {
+  TH: { name: 'Thai', romanize: true },
+  VI: { name: 'Vietnamese', romanize: false }, // sudah pakai huruf Latin
+  HI: { name: 'Hindi', romanize: true }
+};
+
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
+// Nama lengkap tiap kode bahasa yang tersedia di app, dipakai untuk menyusun
+// prompt Gemini yang lebih jelas (mis. "from Indonesian" bukan cuma "from ID").
+const LANGUAGE_NAMES = {
+  KO: 'Korean', EN: 'English', ID: 'Indonesian', JA: 'Japanese', ZH: 'Chinese',
+  FR: 'French', DE: 'German', ES: 'Spanish', IT: 'Italian', RU: 'Russian',
+  AR: 'Arabic', PT: 'Portuguese', TR: 'Turkish', NL: 'Dutch', PL: 'Polish',
+  SV: 'Swedish', BG: 'Bulgarian', CS: 'Czech', DA: 'Danish', EL: 'Greek',
+  ET: 'Estonian', FI: 'Finnish', HU: 'Hungarian', LT: 'Lithuanian', LV: 'Latvian',
+  NB: 'Norwegian', RO: 'Romanian', SK: 'Slovak', SL: 'Slovenian', UK: 'Ukrainian',
+  TH: 'Thai', VI: 'Vietnamese', HI: 'Hindi'
+};
+
+async function translateWithGemini(text, sourceLangCode, targetLangCode) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY belum dikonfigurasi (dibutuhkan untuk bahasa Thai/Vietnam/Hindi).");
+  }
+
+  const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
+  const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
+  const sourceInstruction = (sourceLangCode && sourceLangCode !== 'AUTO')
+    ? `from ${LANGUAGE_NAMES[sourceLangCode] || sourceLangCode} `
+    : '';
+
+  const prompt = `Translate the following text ${sourceInstruction}into ${targetName}. ` +
+    `Reply with ONLY the translated text, no explanation, no quotes, no notes.\n\nText: """${text}"""`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey
+    },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.2 }
+    })
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const translated = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!translated || !translated.trim()) {
+    throw new Error("Gemini tidak mengembalikan hasil terjemahan.");
+  }
+
+  return translated.trim();
+}
+
+// ==========================================================
 // ROMANISASI — mengubah hasil terjemahan non-Latin jadi bacaan Latin
 // ==========================================================
 
@@ -160,6 +229,33 @@ app.post("/api/translate", translateLimiter, async (req, res) => {
     const { text, sourceLang, targetLang, formality } = req.body;
     if (!text || !text.trim()) {
       return res.status(400).json({ error: "Teks tidak boleh kosong" });
+    }
+
+    const targetUpper = (targetLang || '').toUpperCase();
+    const sourceUpper = (sourceLang || '').toUpperCase();
+
+    // Bahasa yang tidak didukung DeepL sama sekali → alihkan ke Gemini
+    if (GEMINI_FALLBACK_LANGUAGES[targetUpper] || GEMINI_FALLBACK_LANGUAGES[sourceUpper]) {
+      try {
+        console.log(`🔄 Menerjemahkan ke ${targetUpper} dengan Gemini (fallback, tidak didukung DeepL)...`);
+        const translatedText = await translateWithGemini(text, sourceUpper, targetUpper);
+        console.log(`✅ Terjemahan Gemini berhasil (${translatedText.length} karakter)`);
+
+        const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetUpper];
+        let romanization = "";
+        if (targetInfo && targetInfo.romanize) {
+          try {
+            romanization = transliterate(translatedText);
+          } catch (err) {
+            console.error("⚠️ Romanisasi Gemini fallback gagal, dilewati:", err.message);
+          }
+        }
+
+        return res.json({ translation: translatedText, romanization });
+      } catch (err) {
+        console.error("❌ Gemini fallback error:", err);
+        return res.status(500).json({ error: err.message || "Gagal menerjemahkan teks (Gemini)." });
+      }
     }
 
     let translator;
