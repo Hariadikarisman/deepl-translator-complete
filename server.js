@@ -49,7 +49,7 @@ function getTranslator() {
 const SUPPORTED_LANGUAGES = [
   'ar', 'bg', 'cs', 'da', 'de', 'el', 'en-us', 'en-gb', 'es', 'et', 'fi',
   'fr', 'hu', 'id', 'it', 'ja', 'ko', 'lt', 'lv', 'nb', 'nl',
-  'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'zh'
+  'pl', 'pt-pt', 'pt-br', 'ro', 'ru', 'sk', 'sl', 'sv', 'tr', 'uk', 'zh'
 ];
 
 // DeepL membedakan aturan kode bahasa antara source_lang dan target_lang:
