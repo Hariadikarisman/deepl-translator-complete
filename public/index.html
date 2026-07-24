@@ -74,8 +74,8 @@
           <div class="control-group-right">
             <!-- Selected Source Language Chip selector -->
             <div class="lang-selector-pill" id="sourceLangPill">
-              <span class="flag" id="sourceLangFlag">🇰🇷</span>
-              <span class="name" id="sourceLangName">Korean</span>
+              <span class="flag" id="sourceLangFlag">🌐</span>
+              <span class="name" id="sourceLangName">Detect</span>
               <span class="chevron">▼</span>
             </div>
 
@@ -247,6 +247,40 @@
           <!-- Populated dynamically via JS -->
         </div>
       </div>
+    </div>
+
+    <!-- ==================== SCREEN: HASIL TRANSLATE FOTO (OVERLAY DI ATAS GAMBAR) ==================== -->
+    <div class="overlay-screen" id="imageResultOverlay">
+      <header class="overlay-header">
+        <button class="back-text-btn" id="backFromImageResultBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Kembali
+        </button>
+        <h2 class="overlay-title">Translate Foto</h2>
+        <div style="width: 60px;"></div>
+      </header>
+
+      <div class="image-result-viewport" id="imageResultViewport">
+        <img id="imageResultPhoto" src="" alt="Foto yang diterjemahkan" />
+        <div class="image-result-loading" id="imageResultLoading">
+          <div class="image-result-spinner"></div>
+          <span>Membaca &amp; menerjemahkan teks...</span>
+        </div>
+        <!-- Kotak label terjemahan disisipkan di sini secara dinamis oleh JS -->
+      </div>
+
+      <footer class="control-bar image-result-lang-bar">
+        <div class="lang-selector-pill lang-pill-readonly" id="imageSourceLangDisplay">
+          <span id="imageSourceLangName">Mendeteksi...</span>
+        </div>
+        <span class="image-result-arrow">→</span>
+        <div class="lang-selector-pill" id="imageTargetLangPill">
+          <span id="imageTargetLangName">English</span>
+          <span class="chevron">▼</span>
+        </div>
+      </footer>
     </div>
 
     <!-- ==================== GLOBAL FLOATING TOAST ==================== -->

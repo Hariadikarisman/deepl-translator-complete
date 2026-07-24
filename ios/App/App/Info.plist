@@ -30,6 +30,8 @@
 	<string>HaKa Translator membutuhkan akses kamera untuk memfoto tulisan yang ingin diterjemahkan.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>HaKa Translator membutuhkan akses galeri foto untuk memilih gambar tulisan yang ingin diterjemahkan.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>HaKa Translator membutuhkan akses ini agar fitur kamera dapat berfungsi dengan baik.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>HaKa Translator membutuhkan akses mikrofon untuk mengubah suara menjadi teks.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

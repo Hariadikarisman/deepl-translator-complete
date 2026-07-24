@@ -202,11 +202,17 @@ async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
   const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
   const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
 
-  const prompt = `Look at the image carefully and extract all readable text from it, preserving ` +
-    `line breaks where it makes sense. Then translate the extracted text into ${targetName}. ` +
+  const prompt = `Analyze this image and detect ALL distinct blocks of readable text in it ` +
+    `(e.g. signs, labels, captions — each logically separate piece of text is its own block). ` +
+    `First, identify the overall language of the text in the image (e.g. "Chinese", "Japanese", "Korean"). ` +
+    `Then for each text block: ` +
+    `1) Extract the original text exactly as it appears. ` +
+    `2) Translate it into ${targetName}. ` +
+    `3) Provide its bounding box using [ymin, xmin, ymax, xmax], integers from 0 to 1000 ` +
+    `representing its position as a percentage of the full image (0 = top/left edge, 1000 = bottom/right edge). ` +
     `Respond with ONLY valid JSON (no markdown code fences, no extra commentary) in this exact shape: ` +
-    `{"extractedText": "...", "translation": "..."}. ` +
-    `If there is no readable text in the image, respond with {"extractedText": "", "translation": ""}.`;
+    `{"detectedLanguage": "...", "blocks": [{"originalText": "...", "translatedText": "...", "box": [ymin, xmin, ymax, xmax]}]}. ` +
+    `If there is no readable text in the image, respond with {"detectedLanguage": "", "blocks": []}.`;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
@@ -242,7 +248,6 @@ async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
     throw new Error("Gemini tidak mengembalikan hasil apapun dari foto ini.");
   }
 
-  // Kadang model tetap membungkus JSON dengan ```json ... ``` walau sudah diminta tidak.
   rawReply = rawReply.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
 
   let parsed;
@@ -252,9 +257,20 @@ async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
     throw new Error("Gagal membaca hasil dari Gemini (format tidak sesuai).");
   }
 
+  const rawBlocks = Array.isArray(parsed.blocks) ? parsed.blocks : [];
+
+  const blocks = rawBlocks
+    .filter(b => b && typeof b.originalText === 'string' && typeof b.translatedText === 'string' && Array.isArray(b.box) && b.box.length === 4)
+    .map(b => ({
+      originalText: b.originalText.trim(),
+      translatedText: b.translatedText.trim(),
+      box: b.box.map(n => Math.max(0, Math.min(1000, Number(n) || 0)))
+    }))
+    .filter(b => b.originalText && b.translatedText);
+
   return {
-    extractedText: (parsed.extractedText || '').trim(),
-    translation: (parsed.translation || '').trim()
+    detectedLanguage: (parsed.detectedLanguage || '').trim(),
+    blocks
   };
 }
 
@@ -410,40 +426,43 @@ app.get("/api/test", (req, res) => {
 // Body untuk gambar base64 bisa beberapa MB — sudah ditampung oleh limit
 // express.json() global yang dinaikkan ke 8mb di atas.
 app.post("/api/translate-image", imageTranslateLimiter, async (req, res) => {
-  try {
-    const { imageBase64, mimeType, targetLang } = req.body;
+    try {
+      const { imageBase64, mimeType, targetLang } = req.body;
 
-    if (!imageBase64) {
-      return res.status(400).json({ error: "Gambar tidak ditemukan." });
+      if (!imageBase64) {
+        return res.status(400).json({ error: "Gambar tidak ditemukan." });
+      }
+      if (!targetLang) {
+        return res.status(400).json({ error: "Target language tidak valid." });
+      }
+
+      const targetUpper = targetLang.toUpperCase();
+      const safeMimeType = mimeType || "image/jpeg";
+
+      console.log(`📷 Membaca & menerjemahkan foto ke ${targetUpper}...`);
+
+      const { detectedLanguage, blocks } = await translateImageWithGemini(
+        imageBase64,
+        safeMimeType,
+        targetUpper
+      );
+
+      if (!blocks.length) {
+        return res.json({ detectedLanguage: "", blocks: [], extractedText: "", translation: "", romanization: "" });
+      }
+
+      const extractedText = blocks.map(b => b.originalText).join('\n');
+      const translation = blocks.map(b => b.translatedText).join('\n');
+
+      console.log(`✅ ${blocks.length} blok teks terbaca dari foto (bahasa: ${detectedLanguage || 'tidak diketahui'})`);
+
+      const romanization = await getRomanizationForTarget(translation, targetUpper);
+
+      res.json({ detectedLanguage, blocks, extractedText, translation, romanization });
+    } catch (error) {
+      console.error("❌ Translate-image error:", error);
+      res.status(500).json({ error: error.message || "Gagal memproses foto." });
     }
-    if (!targetLang) {
-      return res.status(400).json({ error: "Target language tidak valid." });
-    }
-
-    const targetUpper = targetLang.toUpperCase();
-    const safeMimeType = mimeType || "image/jpeg";
-
-    console.log(`📷 Membaca & menerjemahkan foto ke ${targetUpper}...`);
-
-    const { extractedText, translation } = await translateImageWithGemini(
-      imageBase64,
-      safeMimeType,
-      targetUpper
-    );
-
-    if (!extractedText) {
-      return res.json({ extractedText: "", translation: "", romanization: "" });
-    }
-
-    console.log(`✅ Teks dari foto terbaca (${extractedText.length} karakter), diterjemahkan (${translation.length} karakter)`);
-
-    const romanization = await getRomanizationForTarget(translation, targetUpper);
-
-    res.json({ extractedText, translation, romanization });
-  } catch (error) {
-    console.error("❌ Translate-image error:", error);
-    res.status(500).json({ error: error.message || "Gagal memproses foto." });
-  }
 });
 
 app.listen(PORT, "0.0.0.0", () => {

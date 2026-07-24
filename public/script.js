@@ -8,7 +8,7 @@
 
   // ---- LANGUAGE DATABASE (35+ Premium Languages) ----
   const languages = [
-    { code: 'AUTO', name: 'Detect Language', flag: '🌐', ttsCode: 'id-ID', speechCode: 'id-ID' },
+    { code: 'AUTO', name: 'Detect', flag: '🌐', ttsCode: 'id-ID', speechCode: 'id-ID' },
     { code: 'KO', name: 'Korean', flag: '🇰🇷', ttsCode: 'ko-KR', speechCode: 'ko-KR' },
     { code: 'EN', name: 'English', flag: '🇺🇸', ttsCode: 'en-US', speechCode: 'en-US' },
     { code: 'ID', name: 'Indonesian', flag: '🇮🇩', ttsCode: 'id-ID', speechCode: 'id-ID' },
@@ -48,6 +48,8 @@
   let sourceLang = 'AUTO'; // Auto Detect by default
   let targetLang = 'EN'; // English by default as shown in the screenshot
   let currentRomanization = ''; // Romanisasi hasil terjemahan yang sedang tampil
+  let imageTranslateTargetLang = 'EN'; // Target khusus layar translate foto, selalu reset ke EN tiap buka foto baru
+  let lastCapturedPhoto = null; // Foto terakhir yang diambil, dipakai kalau target bahasa diganti di layar hasil
   let historyList = [];
   let isTranslating = false;
   let isListening = false;
@@ -76,6 +78,14 @@
   const speakTargetBtn = document.getElementById('speakTargetBtn');
   const copySourceBtn = document.getElementById('copySourceBtn');
   const cameraTranslateBtn = document.getElementById('cameraTranslateBtn');
+  const imageResultOverlay = document.getElementById('imageResultOverlay');
+  const imageResultViewport = document.getElementById('imageResultViewport');
+  const imageResultPhoto = document.getElementById('imageResultPhoto');
+  const imageResultLoading = document.getElementById('imageResultLoading');
+  const backFromImageResultBtn = document.getElementById('backFromImageResultBtn');
+  const imageSourceLangName = document.getElementById('imageSourceLangName');
+  const imageTargetLangPill = document.getElementById('imageTargetLangPill');
+  const imageTargetLangName = document.getElementById('imageTargetLangName');
   const copyTargetBtn = document.getElementById('copyTargetBtn');
   
   // Modal Overlays
@@ -299,108 +309,157 @@
   // Memakai native Camera plugin Capacitor via window.Capacitor.Plugins.Camera
   // (tidak perlu import npm karena app ini tidak pakai bundler). Native plugin-nya
   // sendiri ditambahkan lewat "npx cap sync" setelah @capacitor/camera di-install.
-  async function handleCameraTranslate() {
-    const CameraPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
-    if (!CameraPlugin) {
-      showToast('Fitur kamera hanya tersedia di aplikasi (bukan browser).');
-      return;
-    }
-
-    let photo;
-    try {
-      photo = await CameraPlugin.getPhoto({
-        quality: 70,
-        allowEditing: false,
-        resultType: 'base64',
-        source: 'PROMPT', // Munculkan pilihan native: "Ambil Foto" atau "Pilih dari Galeri"
-        width: 1600, // Batasi ukuran supaya payload upload tidak terlalu besar
-        correctOrientation: true,
-        promptLabelHeader: 'Translate dari Foto',
-        promptLabelPhoto: 'Pilih dari Galeri',
-        promptLabelPicture: 'Ambil Foto'
-      });
-    } catch (err) {
-      const msg = (err && err.message) ? err.message.toLowerCase() : '';
-      if (msg.indexOf('cancel') === -1) {
-        showToast('Gagal mengambil foto.');
-      }
-      return;
-    }
-
-    if (!photo || !photo.base64String) {
-      showToast('Gagal memproses foto.');
-      return;
-    }
-
-    cameraTranslateBtn.classList.add('is-processing');
-    targetTextEl.classList.remove('translation-placeholder');
-    targetTextEl.textContent = 'Membaca teks dari foto...';
-    adjustFontSize(targetTextEl, 'Membaca teks dari foto...');
-    updateRomanizationDisplay('');
-
-    try {
-      const response = await fetch(getApiUrl('/api/translate-image'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageBase64: photo.base64String,
-          mimeType: 'image/' + (photo.format || 'jpeg'),
-          targetLang: targetLang
-        })
-      });
-
-      const rawText = await response.text();
-      let data = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch (jsonErr) {
-        throw new Error('Server returned invalid response: ' + rawText.substring(0, 150) + ' (Status: ' + response.status + ')');
-      }
-
-      if (!response.ok) {
-        throw new Error(data?.error || 'Server Error (' + response.status + '): ' + rawText.substring(0, 150));
-      }
-
-      if (!data.extractedText || !data.extractedText.trim()) {
-        showToast('Tidak ada teks yang terbaca dari foto ini. Coba foto yang lebih jelas.');
-        targetTextEl.textContent = 'Hasil Terjemahan';
-        targetTextEl.classList.add('translation-placeholder');
-        adjustFontSize(targetTextEl, 'Hasil Terjemahan');
-        return;
-      }
-
-      sourceTextEl.value = data.extractedText;
-      adjustFontSize(sourceTextEl, data.extractedText);
-
-      targetTextEl.textContent = data.translation || '';
-      adjustFontSize(targetTextEl, data.translation || '');
-      updateRomanizationDisplay(data.romanization || '');
-
-      const newItem = {
-        id: Date.now(),
-        source: data.extractedText,
-        translated: data.translation,
-        romanization: data.romanization || '',
-        srcLang: sourceLang,
-        tgtLang: targetLang,
-        timestamp: new Date().toISOString(),
-        favorite: false
-      };
-      historyList.unshift(newItem);
-      saveHistoryToStorage();
-
-      showToast('Teks dari foto berhasil diterjemahkan!');
-    } catch (e) {
-      console.error('Camera translate error:', e);
-      showToast('Gagal menerjemahkan foto: ' + (e.message || 'Terjadi kesalahan.'));
-      targetTextEl.textContent = 'Hasil Terjemahan';
-      targetTextEl.classList.add('translation-placeholder');
-      adjustFontSize(targetTextEl, 'Hasil Terjemahan');
-    } finally {
-      cameraTranslateBtn.classList.remove('is-processing');
-      updateFavoriteBtnState();
-    }
+  // ---- TRANSLATE DARI FOTO (KAMERA / GALERI) ----
+async function handleCameraTranslate() {
+  const CameraPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+  if (!CameraPlugin) {
+    showToast('Fitur kamera hanya tersedia di aplikasi (bukan browser).');
+    return;
   }
+
+  let photo;
+  try {
+    photo = await CameraPlugin.getPhoto({
+      quality: 70,
+      allowEditing: false,
+      resultType: 'base64',
+      source: 'PROMPT',
+      width: 1600,
+      correctOrientation: true,
+      promptLabelHeader: 'Translate dari Foto',
+      promptLabelPhoto: 'Pilih dari Galeri',
+      promptLabelPicture: 'Ambil Foto'
+    });
+  } catch (err) {
+    const msg = (err && err.message) ? err.message : '';
+    let rawDetail = msg;
+    if (!rawDetail) {
+      try {
+        rawDetail = JSON.stringify(err);
+      } catch (stringifyErr) {
+        rawDetail = String(err);
+      }
+    }
+    console.error('Camera getPhoto error (raw):', rawDetail, err);
+    if (msg.toLowerCase().indexOf('cancel') === -1) {
+      showToast('Gagal mengambil foto: ' + (rawDetail || 'unknown error'));
+    }
+    return;
+  }
+
+  if (!photo || !photo.base64String) {
+    showToast('Gagal memproses foto.');
+    return;
+  }
+
+  openImageResultScreen(photo);
+}
+
+function openImageResultScreen(photo) {
+  lastCapturedPhoto = photo;
+  imageTranslateTargetLang = 'EN';
+
+  imageResultPhoto.src = 'data:image/' + (photo.format || 'jpeg') + ';base64,' + photo.base64String;
+  imageSourceLangName.textContent = 'Mendeteksi...';
+  imageTargetLangName.textContent = getLangByCode(imageTranslateTargetLang).name;
+
+  imageResultViewport.querySelectorAll('.image-overlay-label').forEach(el => el.remove());
+  imageResultOverlay.classList.add('active');
+
+  runImageTranslation(photo, imageTranslateTargetLang);
+}
+
+function closeImageResultScreen() {
+  imageResultOverlay.classList.remove('active');
+}
+
+async function runImageTranslation(photo, targetLangCode) {
+  imageResultLoading.classList.remove('hidden');
+  imageResultViewport.querySelectorAll('.image-overlay-label').forEach(el => el.remove());
+  imageTargetLangName.textContent = getLangByCode(targetLangCode).name;
+  cameraTranslateBtn.classList.add('is-processing');
+
+  try {
+    const response = await fetch(getApiUrl('/api/translate-image'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageBase64: photo.base64String,
+        mimeType: 'image/' + (photo.format || 'jpeg'),
+        targetLang: targetLangCode
+      })
+    });
+
+    const rawText = await response.text();
+    let data = null;
+    try {
+      data = JSON.parse(rawText);
+    } catch (jsonErr) {
+      throw new Error('Server returned invalid response: ' + rawText.substring(0, 150) + ' (Status: ' + response.status + ')');
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || 'Server Error (' + response.status + '): ' + rawText.substring(0, 150));
+    }
+
+    if (!data.blocks || !data.blocks.length) {
+      showToast('Tidak ada teks yang terbaca dari foto ini. Coba foto yang lebih jelas.');
+      imageSourceLangName.textContent = 'Tidak terbaca';
+      return;
+    }
+
+    imageSourceLangName.textContent = data.detectedLanguage || 'Tidak diketahui';
+    renderImageOverlayLabels(data.blocks);
+
+    const newItem = {
+      id: Date.now(),
+      source: data.extractedText,
+      translated: data.translation,
+      romanization: data.romanization || '',
+      srcLang: 'AUTO',
+      tgtLang: targetLangCode,
+      timestamp: new Date().toISOString(),
+      favorite: false
+    };
+    historyList.unshift(newItem);
+    saveHistoryToStorage();
+  } catch (e) {
+    console.error('Camera translate error:', e);
+    showToast('Gagal menerjemahkan foto: ' + (e.message || 'Terjadi kesalahan.'));
+    imageSourceLangName.textContent = 'Gagal';
+  } finally {
+    imageResultLoading.classList.add('hidden');
+    cameraTranslateBtn.classList.remove('is-processing');
+  }
+}
+
+function renderImageOverlayLabels(blocks) {
+  imageResultViewport.querySelectorAll('.image-overlay-label').forEach(el => el.remove());
+
+  const imgHeightPx = imageResultPhoto.clientHeight || 300;
+
+  blocks.forEach(function (block) {
+    const box = block.box;
+    const topPct = box[0] / 10;
+    const leftPct = box[1] / 10;
+    const heightPct = Math.max(0, (box[2] - box[0]) / 10);
+    const widthPct = Math.max(0, (box[3] - box[1]) / 10);
+
+    const label = document.createElement('div');
+    label.className = 'image-overlay-label';
+    label.style.top = topPct + '%';
+    label.style.left = leftPct + '%';
+    label.style.width = widthPct + '%';
+    label.style.height = heightPct + '%';
+
+    const boxHeightPx = (heightPct / 100) * imgHeightPx;
+    const fontSize = Math.max(10, Math.min(26, boxHeightPx * 0.55));
+    label.style.fontSize = fontSize + 'px';
+
+    label.textContent = block.translatedText;
+    imageResultViewport.appendChild(label);
+  });
+}
 
   function queueTranslation(text) {
     if (translateDebounceTimeout) {
@@ -653,13 +712,13 @@
   function renderLanguagesInSheet() {
     languageListContainer.innerHTML = '';
     
-    const currentSelected = currentSelectingLangType === 'source' ? sourceLang : targetLang;
+    const currentSelected = currentSelectingLangType === 'source' ? sourceLang : (currentSelectingLangType === 'imageTarget' ? imageTranslateTargetLang : targetLang);
     const query = langSearchQuery.toLowerCase().trim();
 
     // Filter languages
     const filteredLangs = languages.filter(lang => {
-      // If selecting target language, exclude AUTO
-      if (currentSelectingLangType === 'target' && lang.code === 'AUTO') {
+      // Kalau lagi pilih target (baik target biasa maupun target khusus translate foto), AUTO tidak relevan
+      if ((currentSelectingLangType === 'target' || currentSelectingLangType === 'imageTarget') && lang.code === 'AUTO') {
         return false;
       }
       return lang.name.toLowerCase().includes(query);
@@ -700,18 +759,28 @@
   }
 
   function selectLanguage(code) {
-    if (currentSelectingLangType === 'source') {
-      sourceLang = code;
-    } else {
-      targetLang = code;
-    }
-    
+  if (currentSelectingLangType === 'source') {
+    sourceLang = code;
     updateLangPills();
     closeLanguageSheet();
-    
-    // Auto translate current text when languages change
     performTranslation(sourceTextEl.value, true);
+    return;
   }
+
+  if (currentSelectingLangType === 'imageTarget') {
+    imageTranslateTargetLang = code;
+    closeLanguageSheet();
+    if (lastCapturedPhoto) {
+      runImageTranslation(lastCapturedPhoto, imageTranslateTargetLang);
+    }
+    return;
+  }
+
+  targetLang = code;
+  updateLangPills();
+  closeLanguageSheet();
+  performTranslation(sourceTextEl.value, true);
+}
 
   // ---- HISTORY SCREEN & ACTIONS ----
   function formatHistoryDate(timestamp) {
@@ -1031,6 +1100,8 @@
   swapBtn.addEventListener('click', handleLanguageSwap);
   favoriteBtn.addEventListener('click', handleFavoriteToggle);
   cameraTranslateBtn.addEventListener('click', handleCameraTranslate);
+  backFromImageResultBtn.addEventListener('click', closeImageResultScreen);
+  imageTargetLangPill.addEventListener('click', () => openLanguageSheet('imageTarget'));
 
   // History overlay navigation
   historyBtn.addEventListener('click', () => {
