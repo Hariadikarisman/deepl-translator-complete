@@ -80,6 +80,7 @@
   const speakTargetBtn = document.getElementById('speakTargetBtn');
   const copySourceBtn = document.getElementById('copySourceBtn');
   const cameraTranslateBtn = document.getElementById('cameraTranslateBtn');
+  const clearTextBtn = document.getElementById('clearTextBtn');
   const imageResultOverlay = document.getElementById('imageResultOverlay');
   const imageResultViewport = document.getElementById('imageResultViewport');
   const imageResultPhoto = document.getElementById('imageResultPhoto');
@@ -206,6 +207,12 @@
     } else {
       targetRomanizationEl.textContent = '';
       targetRomanizationEl.classList.remove('visible');
+    }
+  }
+
+  function updateClearButtonVisibility() {
+    if (clearTextBtn) {
+      clearTextBtn.classList.toggle('visible', sourceTextEl.value.length > 0);
     }
   }
 
@@ -536,6 +543,7 @@ function renderImageOverlayLabels(blocks) {
         if (transcript) {
           sourceTextEl.value = transcript;
           adjustFontSize(sourceTextEl, transcript);
+          updateClearButtonVisibility();
           showToast('Suara terekam!');
           performTranslation(transcript, true);
         }
@@ -907,6 +915,7 @@ function renderImageOverlayLabels(blocks) {
         adjustFontSize(targetTextEl, item.translated);
         targetTextEl.classList.remove('translation-placeholder');
         updateRomanizationDisplay(item.romanization || '');
+        updateClearButtonVisibility();
         
         updateLangPills();
         historyOverlay.classList.remove('active');
@@ -1026,6 +1035,7 @@ function renderImageOverlayLabels(blocks) {
     adjustFontSize(sourceTextEl, sourceTextEl.value);
     adjustFontSize(targetTextEl, targetTextEl.textContent);
     updateRomanizationDisplay(''); // romanisasi lama tidak relevan lagi setelah swap
+    updateClearButtonVisibility();
 
     updateLangPills();
     showToast('Bahasa ditukar');
@@ -1044,6 +1054,7 @@ function renderImageOverlayLabels(blocks) {
     adjustFontSize(sourceTextEl, '');
     adjustFontSize(targetTextEl, 'Hasil Terjemahan');
     updateRomanizationDisplay('');
+    updateClearButtonVisibility();
     
     updateFavoriteBtnState();
     showToast('Papan ketik dibersihkan');
@@ -1056,24 +1067,15 @@ function renderImageOverlayLabels(blocks) {
   stopSpeechRecognition();
 
   // ---- CLEAR TEXT BUTTON (X) ----
-  const clearTextBtn = document.getElementById('clearTextBtn');
-
   if (clearTextBtn) {
-    // Tampilkan/sembunyikan tombol X berdasarkan teks
-    sourceTextEl.addEventListener('input', function () {
-      const hasText = this.value.length > 0;
-      clearTextBtn.classList.toggle('visible', hasText);
-    });
+    sourceTextEl.addEventListener('input', updateClearButtonVisibility);
 
-    // Saat tombol X diklik, kosongkan workspace
     clearTextBtn.addEventListener('click', function (e) {
       e.stopPropagation();
-      clearAllWorkspace(); // fungsi yang sudah ada
-      clearTextBtn.classList.remove('visible');
+      clearAllWorkspace();
       sourceTextEl.focus();
     });
 
-    // Sembunyikan tombol saat pertama kali load (tidak ada teks)
     clearTextBtn.classList.remove('visible');
   }
 
