@@ -50,6 +50,8 @@
   let currentRomanization = ''; // Romanisasi hasil terjemahan yang sedang tampil
   let imageTranslateTargetLang = 'EN'; // Target khusus layar translate foto, selalu reset ke EN tiap buka foto baru
   let lastCapturedPhoto = null; // Foto terakhir yang diambil, dipakai kalau target bahasa diganti di layar hasil
+  let imageTranslateCache = {}; // Cache hasil per bahasa target untuk foto yang sedang aktif — hindari panggil API ulang kalau user gonta-ganti balik ke bahasa yang sama
+  let isImageTranslating = false; // Cegah request numpuk kalau user ganti bahasa berkali-kali dengan cepat
   let historyList = [];
   let isTranslating = false;
   let isListening = false;
@@ -358,6 +360,7 @@ async function handleCameraTranslate() {
 function openImageResultScreen(photo) {
   lastCapturedPhoto = photo;
   imageTranslateTargetLang = 'EN';
+  imageTranslateCache = {}; // Foto baru = cache lama tidak relevan lagi
 
   imageResultPhoto.src = 'data:image/' + (photo.format || 'jpeg') + ';base64,' + photo.base64String;
   imageSourceLangName.textContent = 'Mendeteksi...';
@@ -374,6 +377,22 @@ function closeImageResultScreen() {
 }
 
 async function runImageTranslation(photo, targetLangCode) {
+  if (isImageTranslating) {
+    showToast('Masih memproses permintaan sebelumnya, tunggu sebentar...');
+    return;
+  }
+
+  // Sudah pernah diterjemahkan ke bahasa ini sebelumnya untuk foto yang sama? Pakai cache, jangan panggil API lagi.
+  if (imageTranslateCache[targetLangCode]) {
+    const cached = imageTranslateCache[targetLangCode];
+    imageSourceLangName.textContent = cached.detectedLanguage || 'Tidak diketahui';
+    imageTargetLangName.textContent = getLangByCode(targetLangCode).name;
+    renderImageOverlayLabels(cached.blocks);
+    return;
+  }
+
+  isImageTranslating = true;
+  imageTargetLangPill.classList.add('is-processing');
   imageResultLoading.classList.remove('hidden');
   imageResultViewport.querySelectorAll('.image-overlay-label').forEach(el => el.remove());
   imageTargetLangName.textContent = getLangByCode(targetLangCode).name;
@@ -399,7 +418,12 @@ async function runImageTranslation(photo, targetLangCode) {
     }
 
     if (!response.ok) {
-      throw new Error(data?.error || 'Server Error (' + response.status + '): ' + rawText.substring(0, 150));
+      // Kasus khusus rate limit/quota Gemini — kasih pesan yang mudah dimengerti, bukan JSON error mentah
+      const errMsg = data?.error || '';
+      if (response.status === 429 || errMsg.indexOf('429') !== -1 || errMsg.toLowerCase().indexOf('quota') !== -1) {
+        throw new Error('Kena limit pemakaian AI gratis (terlalu banyak percobaan dalam waktu singkat). Tunggu 1-2 menit lalu coba lagi.');
+      }
+      throw new Error(errMsg || 'Server Error (' + response.status + '): ' + rawText.substring(0, 150));
     }
 
     if (!data.blocks || !data.blocks.length) {
@@ -410,6 +434,12 @@ async function runImageTranslation(photo, targetLangCode) {
 
     imageSourceLangName.textContent = data.detectedLanguage || 'Tidak diketahui';
     renderImageOverlayLabels(data.blocks);
+
+    // Simpan ke cache supaya kalau user balik lagi ke bahasa ini, tidak perlu panggil API lagi
+    imageTranslateCache[targetLangCode] = {
+      detectedLanguage: data.detectedLanguage || '',
+      blocks: data.blocks
+    };
 
     const newItem = {
       id: Date.now(),
@@ -428,6 +458,8 @@ async function runImageTranslation(photo, targetLangCode) {
     showToast('Gagal menerjemahkan foto: ' + (e.message || 'Terjadi kesalahan.'));
     imageSourceLangName.textContent = 'Gagal';
   } finally {
+    isImageTranslating = false;
+    imageTargetLangPill.classList.remove('is-processing');
     imageResultLoading.classList.add('hidden');
     cameraTranslateBtn.classList.remove('is-processing');
   }
