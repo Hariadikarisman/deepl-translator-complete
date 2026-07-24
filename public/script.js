@@ -329,11 +329,11 @@ async function handleCameraTranslate() {
   let photo;
   try {
     photo = await CameraPlugin.getPhoto({
-      quality: 70,
+      quality: 60,
       allowEditing: false,
       resultType: 'base64',
       source: 'PROMPT',
-      width: 1600,
+      width: 1024,
       correctOrientation: true,
       promptLabelHeader: 'Translate dari Foto',
       promptLabelPhoto: 'Pilih dari Galeri',
