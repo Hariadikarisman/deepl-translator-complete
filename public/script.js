@@ -722,8 +722,11 @@ async function translateConvUtterance(speakingSide, transcript) {
     }
 
     if (data && data.translation) {
-      otherDisplay.innerHTML = '<span class="conv-translated">' + data.translation + '</span>' +
+      otherDisplay.innerHTML = '<span class="conv-translated"></span>' +
         (data.romanization ? '<span class="conv-original" style="margin-top:6px;">' + data.romanization + '</span>' : '');
+      const translatedSpan = otherDisplay.querySelector('.conv-translated');
+      translatedSpan.textContent = data.translation;
+      adjustFontSize(translatedSpan, data.translation);
     } else {
       otherDisplay.innerHTML = '<span class="conv-placeholder">Gagal menerjemahkan</span>';
     }
@@ -1072,29 +1075,29 @@ async function translateConvUtterance(speakingSide, transcript) {
     performTranslation(sourceTextEl.value, true);
   }
 
-  function selectLanguage(code) {
-  if (currentSelectingLangType === 'source') {
-    sourceLang = code;
-    updateLangPills();
-    closeLanguageSheet();
-    performTranslation(sourceTextEl.value, true);
-    return;
-  }
+//   function selectLanguage(code) {
+//   if (currentSelectingLangType === 'source') {
+//     sourceLang = code;
+//     updateLangPills();
+//     closeLanguageSheet();
+//     performTranslation(sourceTextEl.value, true);
+//     return;
+//   }
 
-  if (currentSelectingLangType === 'imageTarget') {
-    imageTranslateTargetLang = code;
-    closeLanguageSheet();
-    if (lastCapturedPhoto) {
-      runImageTranslation(lastCapturedPhoto, imageTranslateTargetLang);
-    }
-    return;
-  }
+//   if (currentSelectingLangType === 'imageTarget') {
+//     imageTranslateTargetLang = code;
+//     closeLanguageSheet();
+//     if (lastCapturedPhoto) {
+//       runImageTranslation(lastCapturedPhoto, imageTranslateTargetLang);
+//     }
+//     return;
+//   }
 
-  targetLang = code;
-  updateLangPills();
-  closeLanguageSheet();
-  performTranslation(sourceTextEl.value, true);
-}
+//   targetLang = code;
+//   updateLangPills();
+//   closeLanguageSheet();
+//   performTranslation(sourceTextEl.value, true);
+// }
 
   // ---- HISTORY SCREEN & ACTIONS ----
   function formatHistoryDate(timestamp) {
