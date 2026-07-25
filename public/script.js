@@ -52,6 +52,7 @@
   let lastCapturedPhoto = null; // Foto terakhir yang diambil, dipakai kalau target bahasa diganti di layar hasil
   let imageTranslateCache = {}; // Cache hasil per bahasa target untuk foto yang sedang aktif — hindari panggil API ulang kalau user gonta-ganti balik ke bahasa yang sama
   let isImageTranslating = false; // Cegah request numpuk kalau user ganti bahasa berkali-kali dengan cepat
+  let isOnline = navigator.onLine;
   let historyList = [];
   let isTranslating = false;
   let isListening = false;
@@ -81,6 +82,7 @@
   const copySourceBtn = document.getElementById('copySourceBtn');
   const cameraTranslateBtn = document.getElementById('cameraTranslateBtn');
   const clearTextBtn = document.getElementById('clearTextBtn');
+  const offlineBanner = document.getElementById('offlineBanner');
   const imageResultOverlay = document.getElementById('imageResultOverlay');
   const imageResultViewport = document.getElementById('imageResultViewport');
   const imageResultPhoto = document.getElementById('imageResultPhoto');
@@ -197,6 +199,22 @@
     }
   }
 
+  function updateOnlineStatus() {
+  isOnline = navigator.onLine;
+  if (offlineBanner) {
+    offlineBanner.classList.toggle('visible', !isOnline);
+  }
+}
+
+function findCachedTranslation(text, srcLangCode, tgtLangCode) {
+  const normalized = text.trim().toLowerCase();
+  return historyList.find(item =>
+    item.source.trim().toLowerCase() === normalized &&
+    item.srcLang === srcLangCode &&
+    item.tgtLang === tgtLangCode
+  ) || null;
+}
+
   // Tampilkan/sembunyikan romanisasi (cara baca) di bawah teks target.
   // Kosongkan text jika tidak ada romanisasi (mis. bahasa Latin seperti EN/ID).
   function updateRomanizationDisplay(text) {
@@ -240,6 +258,25 @@
     adjustFontSize(targetTextEl, 'Menerjemahkan...');
     updateRomanizationDisplay(''); // sembunyikan romanisasi lama selama proses translate
     isTranslating = true;
+
+    if (!navigator.onLine) {
+      const cached = findCachedTranslation(textToTranslate, sourceLang, targetLang);
+      if (cached) {
+        targetTextEl.textContent = cached.translated;
+        adjustFontSize(targetTextEl, cached.translated);
+        updateRomanizationDisplay(cached.romanization || '');
+        showToast('Offline — menampilkan dari riwayat tersimpan');
+        isTranslating = false;
+        updateFavoriteBtnState();
+        return;
+      }
+
+      targetTextEl.textContent = 'Tidak ada koneksi internet. Kalimat ini belum pernah diterjemahkan sebelumnya, jadi tidak tersedia offline.';
+      updateRomanizationDisplay('');
+      isTranslating = false;
+      updateFavoriteBtnState();
+      return;
+    }
 
     try {
       const response = await fetch(getApiUrl('/api/translate'), {
@@ -320,7 +357,13 @@
   // sendiri ditambahkan lewat "npx cap sync" setelah @capacitor/camera di-install.
   // ---- TRANSLATE DARI FOTO (KAMERA / GALERI) ----
 async function handleCameraTranslate() {
+  if (!navigator.onLine) {
+    showToast('Translate foto butuh koneksi internet.');
+    return;
+  }
+
   const CameraPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+
   if (!CameraPlugin) {
     showToast('Fitur kamera hanya tersedia di aplikasi (bukan browser).');
     return;
@@ -1065,6 +1108,12 @@ function renderImageOverlayLabels(blocks) {
   loadHistoryFromStorage();
   updateLangPills();
   stopSpeechRecognition();
+  updateOnlineStatus();
+  window.addEventListener('online', function () {
+    updateOnlineStatus();
+    showToast('Koneksi kembali tersambung');
+  });
+  window.addEventListener('offline', updateOnlineStatus);
 
   // ---- CLEAR TEXT BUTTON (X) ----
   if (clearTextBtn) {
