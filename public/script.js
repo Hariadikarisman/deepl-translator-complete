@@ -751,8 +751,10 @@ async function translateConvUtterance(speakingSide, transcript) {
     }
 
     translateDebounceTimeout = setTimeout(() => {
-      performTranslation(text, true);
-    }, 1000); // 1s optimal user experience typing delay
+      // shouldSaveHistory = false — ini cuma preview selagi user masih mengetik.
+      // Baru disimpan ke history kalau user benar-benar menekan Enter.
+      performTranslation(text, false);
+    }, 1000);
   }
 
   // ---- SPEECH RECOGNITION (STT) ----
@@ -1074,30 +1076,6 @@ async function translateConvUtterance(speakingSide, transcript) {
     closeLanguageSheet();
     performTranslation(sourceTextEl.value, true);
   }
-
-//   function selectLanguage(code) {
-//   if (currentSelectingLangType === 'source') {
-//     sourceLang = code;
-//     updateLangPills();
-//     closeLanguageSheet();
-//     performTranslation(sourceTextEl.value, true);
-//     return;
-//   }
-
-//   if (currentSelectingLangType === 'imageTarget') {
-//     imageTranslateTargetLang = code;
-//     closeLanguageSheet();
-//     if (lastCapturedPhoto) {
-//       runImageTranslation(lastCapturedPhoto, imageTranslateTargetLang);
-//     }
-//     return;
-//   }
-
-//   targetLang = code;
-//   updateLangPills();
-//   closeLanguageSheet();
-//   performTranslation(sourceTextEl.value, true);
-// }
 
   // ---- HISTORY SCREEN & ACTIONS ----
   function formatHistoryDate(timestamp) {
