@@ -42,6 +42,8 @@ const imageTranslateLimiter = rateLimit({
   message: { error: "Terlalu banyak permintaan translate foto. Coba lagi sebentar lagi." }
 });
 
+let translator = null;
+
 function getTranslator() {
   if (!translator) {
     const apiKey = process.env.DEEPL_API_KEY;
