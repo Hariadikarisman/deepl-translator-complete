@@ -48,11 +48,15 @@
   let sourceLang = 'AUTO'; // Auto Detect by default
   let targetLang = 'EN'; // English by default as shown in the screenshot
   let currentRomanization = ''; // Romanisasi hasil terjemahan yang sedang tampil
+  let isOnline = navigator.onLine; // Status koneksi — dipakai untuk mode offline dasar
+  let convLangA = 'ID'; // Bahasa kamu (panel bawah)
+  let convLangB = 'EN'; // Bahasa lawan bicara (panel atas, dibalik 180°)
+  let convRecognitionInstance = null; // Instance STT terpisah dari mic utama, khusus conversation mode
+  let convListeningSide = null; // 'A' | 'B' | null — sisi mana yang sedang merekam
   let imageTranslateTargetLang = 'EN'; // Target khusus layar translate foto, selalu reset ke EN tiap buka foto baru
   let lastCapturedPhoto = null; // Foto terakhir yang diambil, dipakai kalau target bahasa diganti di layar hasil
   let imageTranslateCache = {}; // Cache hasil per bahasa target untuk foto yang sedang aktif — hindari panggil API ulang kalau user gonta-ganti balik ke bahasa yang sama
   let isImageTranslating = false; // Cegah request numpuk kalau user ganti bahasa berkali-kali dengan cepat
-  let isOnline = navigator.onLine;
   let historyList = [];
   let isTranslating = false;
   let isListening = false;
@@ -75,6 +79,19 @@
   const voiceInputBtn = document.getElementById('voiceInputBtn');
   const favoriteBtn = document.getElementById('favoriteBtn');
   const historyBtn = document.getElementById('historyBtn');
+  const offlineBanner = document.getElementById('offlineBanner');
+  const conversationModeBtn = document.getElementById('conversationModeBtn');
+  const conversationOverlay = document.getElementById('conversationOverlay');
+  const backFromConversationBtn = document.getElementById('backFromConversationBtn');
+  const convSwapBtn = document.getElementById('convSwapBtn');
+  const convLangAPill = document.getElementById('convLangAPill');
+  const convLangBPill = document.getElementById('convLangBPill');
+  const convLangAName = document.getElementById('convLangAName');
+  const convLangBName = document.getElementById('convLangBName');
+  const convDisplayA = document.getElementById('convDisplayA');
+  const convDisplayB = document.getElementById('convDisplayB');
+  const convMicA = document.getElementById('convMicA');
+  const convMicB = document.getElementById('convMicB');
   
   // Speakers / Copies
   const speakSourceBtn = document.getElementById('speakSourceBtn');
@@ -82,7 +99,6 @@
   const copySourceBtn = document.getElementById('copySourceBtn');
   const cameraTranslateBtn = document.getElementById('cameraTranslateBtn');
   const clearTextBtn = document.getElementById('clearTextBtn');
-  const offlineBanner = document.getElementById('offlineBanner');
   const imageResultOverlay = document.getElementById('imageResultOverlay');
   const imageResultViewport = document.getElementById('imageResultViewport');
   const imageResultPhoto = document.getElementById('imageResultPhoto');
@@ -227,6 +243,22 @@ function findCachedTranslation(text, srcLangCode, tgtLangCode) {
       targetRomanizationEl.classList.remove('visible');
     }
   }
+
+  function updateOnlineStatus() {
+  isOnline = navigator.onLine;
+  if (offlineBanner) {
+    offlineBanner.classList.toggle('visible', !isOnline);
+  }
+}
+
+function findCachedTranslation(text, srcLangCode, tgtLangCode) {
+  const normalized = text.trim().toLowerCase();
+  return historyList.find(item =>
+    item.source.trim().toLowerCase() === normalized &&
+    item.srcLang === srcLangCode &&
+    item.tgtLang === tgtLangCode
+  ) || null;
+}
 
   function updateClearButtonVisibility() {
     if (clearTextBtn) {
@@ -543,6 +575,164 @@ function renderImageOverlayLabels(blocks) {
   });
 }
 
+// ---- CONVERSATION MODE ----
+// Catatan teknis: Web Speech API TIDAK bisa auto-detect bahasa yang diucapkan —
+// bahasa harus ditentukan SEBELUM mulai merekam. Makanya di mode ini bahasa
+// dipilih sekali di awal sesi (convLangA/convLangB), bukan per-kalimat.
+
+function updateConvLangPills() {
+  convLangAName.textContent = getLangByCode(convLangA).name;
+  convLangBName.textContent = getLangByCode(convLangB).name;
+}
+
+function resetConvDisplay(displayEl) {
+  displayEl.innerHTML = '<span class="conv-placeholder">Ketuk mic untuk bicara</span>';
+}
+
+function openConversationMode() {
+  stopSpeechRecognition(); // matikan mic layar utama kalau kebetulan aktif
+  stopConvListening();
+  updateConvLangPills();
+  resetConvDisplay(convDisplayA);
+  resetConvDisplay(convDisplayB);
+  conversationOverlay.classList.add('active');
+}
+
+function closeConversationMode() {
+  stopConvListening();
+  conversationOverlay.classList.remove('active');
+}
+
+function handleConvSwap() {
+  const temp = convLangA;
+  convLangA = convLangB;
+  convLangB = temp;
+  updateConvLangPills();
+  resetConvDisplay(convDisplayA);
+  resetConvDisplay(convDisplayB);
+  showToast('Bahasa ditukar');
+}
+
+function stopConvListening() {
+  if (convRecognitionInstance) {
+    try { convRecognitionInstance.stop(); } catch (e) {}
+    try { convRecognitionInstance.abort(); } catch (e) {}
+    convRecognitionInstance = null;
+  }
+  convMicA.classList.remove('listening');
+  convMicB.classList.remove('listening');
+  convListeningSide = null;
+}
+
+function startConvListening(side) {
+  if (!navigator.onLine) {
+    showToast('Conversation mode butuh koneksi internet.');
+    return;
+  }
+
+  // Tap sisi yang sedang aktif = batalkan rekaman
+  if (convListeningSide === side) {
+    stopConvListening();
+    return;
+  }
+
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    showToast('Perangkat ini tidak mendukung perekaman suara.');
+    return;
+  }
+
+  stopConvListening(); // pastikan tidak ada sesi lain yang masih jalan
+
+  const langCode = side === 'A' ? convLangA : convLangB;
+  const speechCode = (getLangByCode(langCode).speechCode || 'en-US').replace('_', '-');
+
+  const rec = new SpeechRec();
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.lang = speechCode;
+
+  rec.onstart = function () {
+    convListeningSide = side;
+    (side === 'A' ? convMicA : convMicB).classList.add('listening');
+  };
+
+  rec.onresult = function (event) {
+    const transcript = event.results[0][0].transcript;
+    if (transcript) {
+      translateConvUtterance(side, transcript);
+    }
+  };
+
+  rec.onerror = function (err) {
+    console.error('Conversation STT error:', err.error);
+    if (err.error !== 'no-speech' && err.error !== 'aborted') {
+      showToast('Gagal merekam suara: ' + err.error);
+    }
+    stopConvListening();
+  };
+
+  rec.onend = function () {
+    stopConvListening();
+  };
+
+  convRecognitionInstance = rec;
+
+  try {
+    rec.start();
+  } catch (startErr) {
+    console.error('Conversation STT start failed:', startErr);
+    showToast('Gagal memulai perekaman suara.');
+    stopConvListening();
+  }
+}
+
+// Terjemahkan ucapan dari satu sisi, tampilkan hasilnya di sisi lawan bicara
+async function translateConvUtterance(speakingSide, transcript) {
+  const fromLang = speakingSide === 'A' ? convLangA : convLangB;
+  const toLang = speakingSide === 'A' ? convLangB : convLangA;
+  const ownDisplay = speakingSide === 'A' ? convDisplayA : convDisplayB;
+  const otherDisplay = speakingSide === 'A' ? convDisplayB : convDisplayA;
+
+  ownDisplay.innerHTML = '<span class="conv-original">Kamu: ' + transcript + '</span>';
+  otherDisplay.innerHTML = '<span class="conv-placeholder">Menerjemahkan...</span>';
+
+  try {
+    const response = await fetch(getApiUrl('/api/translate'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: transcript,
+        sourceLang: fromLang,
+        targetLang: toLang,
+        formality: 'default'
+      })
+    });
+
+    const rawText = await response.text();
+    let data = null;
+    try {
+      data = JSON.parse(rawText);
+    } catch (jsonErr) {
+      throw new Error('Server returned invalid response (Status: ' + response.status + ')');
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || 'Server Error (' + response.status + ')');
+    }
+
+    if (data && data.translation) {
+      otherDisplay.innerHTML = '<span class="conv-translated">' + data.translation + '</span>' +
+        (data.romanization ? '<span class="conv-original" style="margin-top:6px;">' + data.romanization + '</span>' : '');
+    } else {
+      otherDisplay.innerHTML = '<span class="conv-placeholder">Gagal menerjemahkan</span>';
+    }
+  } catch (e) {
+    console.error('Conversation translate error:', e);
+    otherDisplay.innerHTML = '<span class="conv-placeholder">Gagal menerjemahkan: ' + (e.message || 'error') + '</span>';
+  }
+}
+
   function queueTranslation(text) {
     if (translateDebounceTimeout) {
       clearTimeout(translateDebounceTimeout);
@@ -777,9 +967,12 @@ function renderImageOverlayLabels(blocks) {
   // ---- LANGUAGE SELECTION BOTTOM SHEET DRAWER ----
   function openLanguageSheet(type) {
     currentSelectingLangType = type;
-    sheetTitle.textContent = type === 'source' ? 'Pilih Bahasa Asal' : 'Pilih Bahasa Tujuan';
+    let title = 'Pilih Bahasa Tujuan';
+    if (type === 'source') title = 'Pilih Bahasa Asal';
+    else if (type === 'convA') title = 'Bahasa Kamu';
+    else if (type === 'convB') title = 'Bahasa Lawan Bicara';
+    sheetTitle.textContent = title;
     
-    // Clear search and render the list
     langSearchInput.value = '';
     langSearchQuery = '';
     renderLanguagesInSheet();
@@ -795,13 +988,16 @@ function renderImageOverlayLabels(blocks) {
   function renderLanguagesInSheet() {
     languageListContainer.innerHTML = '';
     
-    const currentSelected = currentSelectingLangType === 'source' ? sourceLang : (currentSelectingLangType === 'imageTarget' ? imageTranslateTargetLang : targetLang);
+    const currentSelected = currentSelectingLangType === 'source' ? sourceLang
+      : currentSelectingLangType === 'imageTarget' ? imageTranslateTargetLang
+      : currentSelectingLangType === 'convA' ? convLangA
+      : currentSelectingLangType === 'convB' ? convLangB
+      : targetLang;
     const query = langSearchQuery.toLowerCase().trim();
 
-    // Filter languages
     const filteredLangs = languages.filter(lang => {
-      // Kalau lagi pilih target (baik target biasa maupun target khusus translate foto), AUTO tidak relevan
-      if ((currentSelectingLangType === 'target' || currentSelectingLangType === 'imageTarget') && lang.code === 'AUTO') {
+      const excludeAuto = ['target', 'imageTarget', 'convA', 'convB'].indexOf(currentSelectingLangType) !== -1;
+      if (excludeAuto && lang.code === 'AUTO') {
         return false;
       }
       return lang.name.toLowerCase().includes(query);
@@ -839,6 +1035,41 @@ function renderImageOverlayLabels(blocks) {
 
       languageListContainer.appendChild(item);
     });
+  }
+
+  function selectLanguage(code) {
+    if (currentSelectingLangType === 'source') {
+      sourceLang = code;
+      updateLangPills();
+      closeLanguageSheet();
+      performTranslation(sourceTextEl.value, true);
+      return;
+    }
+
+    if (currentSelectingLangType === 'imageTarget') {
+      imageTranslateTargetLang = code;
+      closeLanguageSheet();
+      if (lastCapturedPhoto) {
+        runImageTranslation(lastCapturedPhoto, imageTranslateTargetLang);
+      }
+      return;
+    }
+
+    if (currentSelectingLangType === 'convA' || currentSelectingLangType === 'convB') {
+      if (currentSelectingLangType === 'convA') {
+        convLangA = code;
+      } else {
+        convLangB = code;
+      }
+      updateConvLangPills();
+      closeLanguageSheet();
+      return;
+    }
+
+    targetLang = code;
+    updateLangPills();
+    closeLanguageSheet();
+    performTranslation(sourceTextEl.value, true);
   }
 
   function selectLanguage(code) {
@@ -1105,147 +1336,158 @@ function renderImageOverlayLabels(blocks) {
   }
 
   function init() {
-  loadHistoryFromStorage();
-  updateLangPills();
-  stopSpeechRecognition();
-  updateOnlineStatus();
-  window.addEventListener('online', function () {
+    loadHistoryFromStorage();
+    updateLangPills();
+    stopSpeechRecognition();
     updateOnlineStatus();
-    showToast('Koneksi kembali tersambung');
-  });
-  window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener('online', function () {
+      updateOnlineStatus();
+      showToast('Koneksi kembali tersambung');
+    });
+    window.addEventListener('offline', updateOnlineStatus);
 
-  // ---- CLEAR TEXT BUTTON (X) ----
-  if (clearTextBtn) {
-    sourceTextEl.addEventListener('input', updateClearButtonVisibility);
+    // ---- CLEAR TEXT BUTTON (X) ----
+    if (clearTextBtn) {
+      sourceTextEl.addEventListener('input', updateClearButtonVisibility);
 
-    clearTextBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      clearAllWorkspace();
-      sourceTextEl.focus();
+      clearTextBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        clearAllWorkspace();
+        sourceTextEl.focus();
+      });
+
+      clearTextBtn.classList.remove('visible');
+    }
+
+    // Matikan mikrofon saat app masuk background
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        stopSpeechRecognition();
+        stopConvListening();
+      }
     });
 
-    clearTextBtn.classList.remove('visible');
-  }
-
-  // Matikan mikrofon saat app masuk background
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
+    // Matikan mikrofon saat aplikasi keluar
+    window.addEventListener('pagehide', function () {
       stopSpeechRecognition();
-    }
-  });
+      stopConvListening();
+    });
 
-  // Matikan mikrofon saat aplikasi keluar
-  window.addEventListener('pagehide', function () {
-    stopSpeechRecognition();
-  });
+    // Matikan mikrofon saat app akan ditutup
+    window.addEventListener('beforeunload', function () {
+      stopSpeechRecognition();
+      stopConvListening();
+    });
 
-  // Matikan mikrofon saat app akan ditutup
-  window.addEventListener('beforeunload', function () {
-    stopSpeechRecognition();
-  });
+    // Text Input Events
+    sourceTextEl.addEventListener('input', function () {
+      adjustFontSize(this, this.value);
+      queueTranslation(this.value);
+    });
 
-  // Text Input Events
-  sourceTextEl.addEventListener('input', function () {
-    adjustFontSize(this, this.value);
-    queueTranslation(this.value);
-  });
+    sourceTextEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault(); // Prevent carriage return
+        this.blur(); // Dismiss native mobile keyboard
 
-  sourceTextEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent carriage return
-      this.blur(); // Dismiss native mobile keyboard
-
-      const text = this.value.trim();
-      if (text) {
-        // Cancel any scheduled debounced translation timeout to trigger immediate translation
-        if (translateDebounceTimeout) {
-          clearTimeout(translateDebounceTimeout);
+        const text = this.value.trim();
+        if (text) {
+          // Cancel any scheduled debounced translation timeout to trigger immediate translation
+          if (translateDebounceTimeout) {
+            clearTimeout(translateDebounceTimeout);
+          }
+          performTranslation(text, true); // Force immediate translation and save to history
         }
-        performTranslation(text, true); // Force immediate translation and save to history
       }
-    }
-  });
+    });
 
-  // Language pills clicking
-  sourceLangPill.addEventListener('click', () => openLanguageSheet('source'));
-  targetLangPill.addEventListener('click', () => openLanguageSheet('target'));
+    // Language pills clicking
+    sourceLangPill.addEventListener('click', () => openLanguageSheet('source'));
+    targetLangPill.addEventListener('click', () => openLanguageSheet('target'));
 
-  // Bottom Sheet search & close
-  closeSheetBtn.addEventListener('click', closeLanguageSheet);
-  sheetBackdrop.addEventListener('click', closeLanguageSheet);
-  langSearchInput.addEventListener('input', function () {
-    langSearchQuery = this.value;
-    renderLanguagesInSheet();
-  });
+    // Bottom Sheet search & close
+    closeSheetBtn.addEventListener('click', closeLanguageSheet);
+    sheetBackdrop.addEventListener('click', closeLanguageSheet);
+    langSearchInput.addEventListener('input', function () {
+      langSearchQuery = this.value;
+      renderLanguagesInSheet();
+    });
 
-  // History and favorite workspace events
-  swapBtn.addEventListener('click', handleLanguageSwap);
-  favoriteBtn.addEventListener('click', handleFavoriteToggle);
-  cameraTranslateBtn.addEventListener('click', handleCameraTranslate);
-  backFromImageResultBtn.addEventListener('click', closeImageResultScreen);
-  imageTargetLangPill.addEventListener('click', () => openLanguageSheet('imageTarget'));
+    // History and favorite workspace events
+    swapBtn.addEventListener('click', handleLanguageSwap);
+    favoriteBtn.addEventListener('click', handleFavoriteToggle);
+    cameraTranslateBtn.addEventListener('click', handleCameraTranslate);
+    backFromImageResultBtn.addEventListener('click', closeImageResultScreen);
+    imageTargetLangPill.addEventListener('click', () => openLanguageSheet('imageTarget'));
 
-  // History overlay navigation
-  historyBtn.addEventListener('click', () => {
-    historyOverlay.classList.add('active');
-    renderHistoryItems();
-  });
-  backFromHistoryBtn.addEventListener('click', () => {
-    historyOverlay.classList.remove('active');
-  });
-  clearHistoryBtn.addEventListener('click', clearAllHistory);
+    conversationModeBtn.addEventListener('click', openConversationMode);
+    backFromConversationBtn.addEventListener('click', closeConversationMode);
+    convSwapBtn.addEventListener('click', handleConvSwap);
+    convLangAPill.addEventListener('click', () => openLanguageSheet('convA'));
+    convLangBPill.addEventListener('click', () => openLanguageSheet('convB'));
+    convMicA.addEventListener('click', () => startConvListening('A'));
+    convMicB.addEventListener('click', () => startConvListening('B'));
 
-  // Segmented tabs within History Overlay
-  tabHistory.addEventListener('click', function () {
-    tabHistory.classList.add('active');
-    tabFavourite.classList.remove('active');
-    activeHistoryTab = 'history';
-    renderHistoryItems();
-  });
-  tabFavourite.addEventListener('click', function () {
-    tabFavourite.classList.add('active');
-    tabHistory.classList.remove('active');
-    activeHistoryTab = 'favorite';
-    renderHistoryItems();
-  });
+    // History overlay navigation
+    historyBtn.addEventListener('click', () => {
+      historyOverlay.classList.add('active');
+      renderHistoryItems();
+    });
+    backFromHistoryBtn.addEventListener('click', () => {
+      historyOverlay.classList.remove('active');
+    });
+    clearHistoryBtn.addEventListener('click', clearAllHistory);
 
-  // Search filter inside History Overlay
-  historySearchInput.addEventListener('input', function () {
-    historySearchQuery = this.value;
-    searchClearBtn.classList.toggle('visible', this.value.length > 0);
-    renderHistoryItems();
-  });
-  searchClearBtn.addEventListener('click', () => {
-    historySearchInput.value = '';
-    historySearchQuery = '';
-    searchClearBtn.classList.remove('visible');
-    renderHistoryItems();
-  });
+    // Segmented tabs within History Overlay
+    tabHistory.addEventListener('click', function () {
+      tabHistory.classList.add('active');
+      tabFavourite.classList.remove('active');
+      activeHistoryTab = 'history';
+      renderHistoryItems();
+    });
+    tabFavourite.addEventListener('click', function () {
+      tabFavourite.classList.add('active');
+      tabHistory.classList.remove('active');
+      activeHistoryTab = 'favorite';
+      renderHistoryItems();
+    });
 
-  // Audio triggers
-  voiceInputBtn.addEventListener('click', toggleVoiceInput);
-  speakSourceBtn.addEventListener('click', () => speakSentence(sourceTextEl.value, sourceLang, true));
-  speakTargetBtn.addEventListener('click', () => speakSentence(targetTextEl.textContent, targetLang, false));
+    // Search filter inside History Overlay
+    historySearchInput.addEventListener('input', function () {
+      historySearchQuery = this.value;
+      searchClearBtn.classList.toggle('visible', this.value.length > 0);
+      renderHistoryItems();
+    });
+    searchClearBtn.addEventListener('click', () => {
+      historySearchInput.value = '';
+      historySearchQuery = '';
+      searchClearBtn.classList.remove('visible');
+      renderHistoryItems();
+    });
 
-  // Copy triggers
-  copySourceBtn.addEventListener('click', () => copyTextToClipboard(sourceTextEl.value));
-  copyTargetBtn.addEventListener('click', () => copyTextToClipboard(targetTextEl.textContent));
+    // Audio triggers
+    voiceInputBtn.addEventListener('click', toggleVoiceInput);
+    speakSourceBtn.addEventListener('click', () => speakSentence(sourceTextEl.value, sourceLang, true));
+    speakTargetBtn.addEventListener('click', () => speakSentence(targetTextEl.textContent, targetLang, false));
 
-  // Handle initial keyboard layout optimizations
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      stopSpeechRecognition();
-      try {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-        }
-      } catch (e) {}
-    }
-  });
+    // Copy triggers
+    copySourceBtn.addEventListener('click', () => copyTextToClipboard(sourceTextEl.value));
+    copyTargetBtn.addEventListener('click', () => copyTextToClipboard(targetTextEl.textContent));
 
-  console.log('Haka Translator vanilla engine initialized successfully.');
-}
+    // Handle initial keyboard layout optimizations
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        stopSpeechRecognition();
+        try {
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+        } catch (e) {}
+      }
+    });
+
+    console.log('Haka Translator vanilla engine initialized successfully.');
+  }
 
   // Self start
   if (document.readyState === 'loading') {

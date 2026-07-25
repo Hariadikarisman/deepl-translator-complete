@@ -35,24 +35,31 @@
         
         <!-- HEADER BAR inside top half -->
         <header class="header-bar">
-  <!-- Tombol History (kiri) -->
-  <button class="header-btn" id="historyBtn" aria-label="Riwayat Terjemahan">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-      <path d="M3 3v5h5"/>
-      <path d="M12 7v5l4 2"/>
-    </svg>
-  </button>
-  
-  <h1 class="header-title">Haka translator</h1>
-  
-  <!-- Tombol Favorit (kanan) -->
-  <button class="header-btn" id="favoriteBtn" aria-label="Favorit">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-    </svg>
-  </button>
-</header>
+        <!-- Grup kiri: History + Conversation Mode -->
+        <div class="header-btn-group">
+          <button class="header-btn" id="historyBtn" aria-label="Riwayat Terjemahan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M12 7v5l4 2"/>
+            </svg>
+          </button>
+          <button class="header-btn" id="conversationModeBtn" aria-label="Mode Percakapan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </button>
+        </div>
+        
+        <h1 class="header-title">Haeeeeka translator</h1>
+        
+        <!-- Tombol Favorit (kanan) -->
+        <button class="header-btn" id="favoriteBtn" aria-label="Favorit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
+      </header>
 
         <!-- Dynamic Content Textarea for text entry -->
         <div class="content-area" style="position:relative;">
@@ -294,6 +301,69 @@
           <span class="chevron">▼</span>
         </div>
       </footer>
+    </div>
+
+    <!-- ==================== SCREEN: CONVERSATION MODE ==================== -->
+    <div class="overlay-screen conversation-screen" id="conversationOverlay">
+
+      <!-- Panel ATAS — untuk lawan bicara, dibalik 180° supaya bisa dibaca dari sisi berlawanan -->
+      <div class="conversation-panel conversation-panel-top" id="conversationPanelTop">
+        <div class="conversation-panel-content">
+          <button class="conv-lang-pill" id="convLangBPill">
+            <span id="convLangBName">English</span>
+            <span class="chevron">▼</span>
+          </button>
+          <div class="conversation-text-display" id="convDisplayB">
+            <span class="conv-placeholder">Ketuk mic untuk bicara</span>
+          </div>
+          <button class="conv-mic-btn" id="convMicB" aria-label="Bicara (lawan bicara)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Kontrol tengah: kembali & tukar bahasa -->
+      <div class="conversation-center-controls">
+        <button class="conv-control-btn" id="backFromConversationBtn" aria-label="Kembali">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <button class="conv-control-btn" id="convSwapBtn" aria-label="Tukar bahasa">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 16 4 4 4-4"/>
+            <path d="M7 20V4"/>
+            <path d="m21 8-4-4-4 4"/>
+            <path d="M17 4v16"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Panel BAWAH — untuk kamu, orientasi normal -->
+      <div class="conversation-panel conversation-panel-bottom" id="conversationPanelBottom">
+        <div class="conversation-panel-content">
+          <button class="conv-lang-pill" id="convLangAPill">
+            <span id="convLangAName">Indonesian</span>
+            <span class="chevron">▼</span>
+          </button>
+          <div class="conversation-text-display" id="convDisplayA">
+            <span class="conv-placeholder">Ketuk mic untuk bicara</span>
+          </div>
+          <button class="conv-mic-btn" id="convMicA" aria-label="Bicara (kamu)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
     </div>
 
     <!-- ==================== GLOBAL FLOATING TOAST ==================== -->

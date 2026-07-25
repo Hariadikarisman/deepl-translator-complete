@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 // Limit dinaikkan ke 8mb supaya bisa menampung payload gambar base64 dari fitur translate foto
+// (request teks translate biasa jauh lebih kecil dari ini, jadi aman dipakai bersama).
 app.use(express.json({ limit: "8mb" }));
 
 // Batasi request per IP supaya biaya DeepL tidak jebol kalau ada yang spam/scraping.
@@ -41,8 +42,6 @@ const imageTranslateLimiter = rateLimit({
   message: { error: "Terlalu banyak permintaan translate foto. Coba lagi sebentar lagi." }
 });
 
-let translator = null;
-
 function getTranslator() {
   if (!translator) {
     const apiKey = process.env.DEEPL_API_KEY;
@@ -57,6 +56,8 @@ function getTranslator() {
 }
 
 // Daftar bahasa yang didukung DeepL (semua lowercase)
+// Catatan: 'pt' otomatis dipetakan jadi 'pt-pt'/'pt-br' oleh normalizeTargetLang,
+// jadi yang divalidasi di sini harus varian regionalnya, bukan 'pt' polos.
 const SUPPORTED_LANGUAGES = [
   'ar', 'bg', 'cs', 'da', 'de', 'el', 'en-us', 'en-gb', 'es', 'et', 'fi',
   'fr', 'hu', 'id', 'it', 'ja', 'ko', 'lt', 'lv', 'nb', 'nl',
@@ -99,179 +100,6 @@ function normalizeTargetLang(code) {
 
   // Untuk bahasa lain, lowercase (misal 'ID' -> 'id', 'KO' -> 'ko')
   return code.toLowerCase();
-}
-
-// ==========================================================
-// FALLBACK GEMINI — untuk bahasa yang TIDAK didukung DeepL sama sekali
-// (Thailand, Vietnam, Hindi). DeepL tetap dipakai untuk semua bahasa lain
-// karena kualitasnya lebih konsisten untuk terjemahan.
-// ==========================================================
-const GEMINI_FALLBACK_LANGUAGES = {
-  TH: { name: 'Thai', romanize: true },
-  VI: { name: 'Vietnamese', romanize: false }, // sudah pakai huruf Latin
-  HI: { name: 'Hindi', romanize: true }
-};
-
-const GEMINI_MODEL = 'gemini-3.5-flash';
-
-// Nama lengkap tiap kode bahasa yang tersedia di app, dipakai untuk menyusun
-// prompt Gemini yang lebih jelas (mis. "from Indonesian" bukan cuma "from ID").
-const LANGUAGE_NAMES = {
-  KO: 'Korean', EN: 'English', ID: 'Indonesian', JA: 'Japanese', ZH: 'Chinese',
-  FR: 'French', DE: 'German', ES: 'Spanish', IT: 'Italian', RU: 'Russian',
-  AR: 'Arabic', PT: 'Portuguese', TR: 'Turkish', NL: 'Dutch', PL: 'Polish',
-  SV: 'Swedish', BG: 'Bulgarian', CS: 'Czech', DA: 'Danish', EL: 'Greek',
-  ET: 'Estonian', FI: 'Finnish', HU: 'Hungarian', LT: 'Lithuanian', LV: 'Latvian',
-  NB: 'Norwegian', RO: 'Romanian', SK: 'Slovak', SL: 'Slovenian', UK: 'Ukrainian',
-  TH: 'Thai', VI: 'Vietnamese', HI: 'Hindi'
-};
-
-async function translateWithGemini(text, sourceLangCode, targetLangCode) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY belum dikonfigurasi (dibutuhkan untuk bahasa Thai/Vietnam/Hindi).");
-  }
-
-  const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
-  const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
-  const sourceInstruction = (sourceLangCode && sourceLangCode !== 'AUTO')
-    ? `from ${LANGUAGE_NAMES[sourceLangCode] || sourceLangCode} `
-    : '';
-
-  const prompt = `Translate the following text ${sourceInstruction}into ${targetName}. ` +
-    `Reply with ONLY the translated text, no explanation, no quotes, no notes.\n\nText: """${text}"""`;
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey
-    },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        thinkingConfig: { thinkingLevel: "low" }
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errBody = await response.text().catch(() => '');
-    throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await response.json();
-  const translated = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!translated || !translated.trim()) {
-    throw new Error("Gemini tidak mengembalikan hasil terjemahan.");
-  }
-
-  return translated.trim();
-}
-
-// Helper terpadu: pilih cara romanisasi yang tepat untuk kode bahasa target manapun
-// (dipakai baik oleh jalur DeepL maupun fallback Gemini/translate-foto)
-async function getRomanizationForTarget(text, targetUpperCode) {
-  const fallbackInfo = GEMINI_FALLBACK_LANGUAGES[targetUpperCode];
-  if (fallbackInfo) {
-    if (!fallbackInfo.romanize) return "";
-    try {
-      return transliterate(text);
-    } catch (err) {
-      console.error("⚠️ Romanisasi gagal, dilewati:", err.message);
-      return "";
-    }
-  }
-  return getRomanization(text, normalizeTargetLang(targetUpperCode));
-}
-
-// ==========================================================
-// TRANSLATE DARI FOTO — baca teks dari gambar (OCR) sekaligus translate
-// dalam satu panggilan Gemini vision. Tidak perlu OCR service terpisah.
-// ==========================================================
-async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY belum dikonfigurasi (dibutuhkan untuk fitur translate dari foto).");
-  }
-
-  const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
-  const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
-
-  const prompt = `Analyze this image and detect ALL distinct blocks of readable text in it ` +
-    `(e.g. signs, labels, captions — each logically separate piece of text is its own block). ` +
-    `First, identify the overall language of the text in the image (e.g. "Chinese", "Japanese", "Korean"). ` +
-    `Then for each text block: ` +
-    `1) Extract the original text exactly as it appears. ` +
-    `2) Translate it into ${targetName}. ` +
-    `3) Provide its bounding box using [ymin, xmin, ymax, xmax], integers from 0 to 1000 ` +
-    `representing its position as a percentage of the full image (0 = top/left edge, 1000 = bottom/right edge). ` +
-    `Respond with ONLY valid JSON (no markdown code fences, no extra commentary) in this exact shape: ` +
-    `{"detectedLanguage": "...", "blocks": [{"originalText": "...", "translatedText": "...", "box": [ymin, xmin, ymax, xmax]}]}. ` +
-    `If there is no readable text in the image, respond with {"detectedLanguage": "", "blocks": []}.`;
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [
-          { inline_data: { mime_type: mimeType, data: imageBase64 } },
-          { text: prompt }
-        ]
-      }],
-      generationConfig: {
-        temperature: 0.2,
-        thinkingConfig: { thinkingLevel: "low" }
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errBody = await response.text().catch(() => '');
-    throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
-  }
-
-  const data = await response.json();
-  let rawReply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!rawReply || !rawReply.trim()) {
-    throw new Error("Gemini tidak mengembalikan hasil apapun dari foto ini.");
-  }
-
-  rawReply = rawReply.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
-
-  let parsed;
-  try {
-    parsed = JSON.parse(rawReply);
-  } catch (err) {
-    throw new Error("Gagal membaca hasil dari Gemini (format tidak sesuai).");
-  }
-
-  const rawBlocks = Array.isArray(parsed.blocks) ? parsed.blocks : [];
-
-  const blocks = rawBlocks
-    .filter(b => b && typeof b.originalText === 'string' && typeof b.translatedText === 'string' && Array.isArray(b.box) && b.box.length === 4)
-    .map(b => ({
-      originalText: b.originalText.trim(),
-      translatedText: b.translatedText.trim(),
-      box: b.box.map(n => Math.max(0, Math.min(1000, Number(n) || 0)))
-    }))
-    .filter(b => b.originalText && b.translatedText);
-
-  return {
-    detectedLanguage: (parsed.detectedLanguage || '').trim(),
-    blocks
-  };
 }
 
 // ==========================================================
@@ -337,6 +165,202 @@ async function getRomanization(text, targetLangCode) {
     return ""; // gagal romanisasi tidak boleh membuat translate gagal total
   }
 }
+
+// ==========================================================
+// FALLBACK GEMINI — untuk bahasa yang TIDAK didukung DeepL sama sekali
+// (Thailand, Vietnam, Hindi). DeepL tetap dipakai untuk semua bahasa lain
+// karena kualitasnya lebih konsisten untuk terjemahan.
+// ==========================================================
+const GEMINI_FALLBACK_LANGUAGES = {
+  TH: { name: 'Thai', romanize: true },
+  VI: { name: 'Vietnamese', romanize: false }, // sudah pakai huruf Latin
+  HI: { name: 'Hindi', romanize: true }
+};
+
+// Catatan: Google mempercepat retirement gemini-2.5-flash khusus untuk API key baru
+// (per Juli 2026), meski jadwal resminya baru Oktober 2026. Pakai versi terbaru
+// yang belum ada jadwal pensiun. Kalau suatu saat model ini juga di-retire,
+// cek daftar model terbaru di https://ai.google.dev/gemini-api/docs/models
+const GEMINI_MODEL = 'gemini-3.5-flash';
+
+// Nama lengkap tiap kode bahasa yang tersedia di app, dipakai untuk menyusun
+// prompt Gemini yang lebih jelas (mis. "from Indonesian" bukan cuma "from ID").
+const LANGUAGE_NAMES = {
+  KO: 'Korean', EN: 'English', ID: 'Indonesian', JA: 'Japanese', ZH: 'Chinese',
+  FR: 'French', DE: 'German', ES: 'Spanish', IT: 'Italian', RU: 'Russian',
+  AR: 'Arabic', PT: 'Portuguese', TR: 'Turkish', NL: 'Dutch', PL: 'Polish',
+  SV: 'Swedish', BG: 'Bulgarian', CS: 'Czech', DA: 'Danish', EL: 'Greek',
+  ET: 'Estonian', FI: 'Finnish', HU: 'Hungarian', LT: 'Lithuanian', LV: 'Latvian',
+  NB: 'Norwegian', RO: 'Romanian', SK: 'Slovak', SL: 'Slovenian', UK: 'Ukrainian',
+  TH: 'Thai', VI: 'Vietnamese', HI: 'Hindi'
+};
+
+async function translateWithGemini(text, sourceLangCode, targetLangCode) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY belum dikonfigurasi (dibutuhkan untuk bahasa Thai/Vietnam/Hindi).");
+  }
+
+  const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
+  const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
+  const sourceInstruction = (sourceLangCode && sourceLangCode !== 'AUTO')
+    ? `from ${LANGUAGE_NAMES[sourceLangCode] || sourceLangCode} `
+    : '';
+
+  const prompt = `Translate the following text ${sourceInstruction}into ${targetName}. ` +
+    `Reply with ONLY the translated text, no explanation, no quotes, no notes.\n\nText: """${text}"""`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey
+    },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.2,
+        // Translate itu tugas sederhana, tidak butuh "mikir panjang" ala reasoning model.
+        // thinkingLevel 'low' bikin respons jauh lebih cepat tanpa mengorbankan kualitas
+        // untuk tugas seperti ini (gemini-3.x tidak bisa mematikan thinking sepenuhnya).
+        thinkingConfig: { thinkingLevel: "low" }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const translated = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!translated || !translated.trim()) {
+    throw new Error("Gemini tidak mengembalikan hasil terjemahan.");
+  }
+
+  return translated.trim();
+}
+
+// Helper terpadu: pilih cara romanisasi yang tepat untuk kode bahasa target manapun
+// (dipakai baik oleh jalur DeepL maupun fallback Gemini/translate-foto)
+async function getRomanizationForTarget(text, targetUpperCode) {
+  const fallbackInfo = GEMINI_FALLBACK_LANGUAGES[targetUpperCode];
+  if (fallbackInfo) {
+    if (!fallbackInfo.romanize) return "";
+    try {
+      return transliterate(text);
+    } catch (err) {
+      console.error("⚠️ Romanisasi gagal, dilewati:", err.message);
+      return "";
+    }
+  }
+  return getRomanization(text, normalizeTargetLang(targetUpperCode));
+}
+
+// ==========================================================
+// TRANSLATE DARI FOTO — baca teks dari gambar (OCR) sekaligus translate
+// dalam satu panggilan Gemini vision. Tidak perlu OCR service terpisah.
+// ==========================================================
+async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY belum dikonfigurasi (dibutuhkan untuk fitur translate dari foto).");
+  }
+
+  const targetInfo = GEMINI_FALLBACK_LANGUAGES[targetLangCode];
+  const targetName = targetInfo ? targetInfo.name : (LANGUAGE_NAMES[targetLangCode] || targetLangCode);
+
+  const prompt = `Analyze this image and detect ALL distinct blocks of readable text in it ` +
+    `(e.g. signs, labels, captions — each logically separate piece of text is its own block). ` +
+    `The image may contain text in MORE THAN ONE language — handle each block independently. ` +
+    `For each text block: ` +
+    `1) Extract the original text exactly as it appears. ` +
+    `2) Identify which language that block's original text is written in (e.g. "Chinese", "Japanese", "Korean", "English"). ` +
+    `3) Translate it into ${targetName}. ` +
+    `4) Provide its bounding box using [ymin, xmin, ymax, xmax], integers from 0 to 1000 ` +
+    `representing its position as a percentage of the full image (0 = top/left edge, 1000 = bottom/right edge). ` +
+    `Respond with ONLY valid JSON (no markdown code fences, no extra commentary) in this exact shape: ` +
+    `{"blocks": [{"originalText": "...", "originalLanguage": "...", "translatedText": "...", "box": [ymin, xmin, ymax, xmax]}]}. ` +
+    `If there is no readable text in the image, respond with {"blocks": []}.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: mimeType, data: imageBase64 } },
+          { text: prompt }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        thinkingConfig: { thinkingLevel: "low" }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text().catch(() => '');
+    throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  let rawReply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!rawReply || !rawReply.trim()) {
+    throw new Error("Gemini tidak mengembalikan hasil apapun dari foto ini.");
+  }
+
+  // Kadang model tetap membungkus JSON dengan ```json ... ``` walau sudah diminta tidak.
+  rawReply = rawReply.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+
+  let parsed;
+  try {
+    parsed = JSON.parse(rawReply);
+  } catch (err) {
+    throw new Error("Gagal membaca hasil dari Gemini (format tidak sesuai).");
+  }
+
+  const rawBlocks = Array.isArray(parsed.blocks) ? parsed.blocks : [];
+
+  // Validasi tiap block: harus punya originalText, translatedText, dan box berisi 4 angka.
+  const blocks = rawBlocks
+    .filter(b => b && typeof b.originalText === 'string' && typeof b.translatedText === 'string' && Array.isArray(b.box) && b.box.length === 4)
+    .map(b => ({
+      originalText: b.originalText.trim(),
+      originalLanguage: typeof b.originalLanguage === 'string' ? b.originalLanguage.trim() : '',
+      translatedText: b.translatedText.trim(),
+      // Clamp ke 0-1000 supaya tidak ada box yang meleset keluar gambar kalau model sedikit meleset
+      box: b.box.map(n => Math.max(0, Math.min(1000, Number(n) || 0)))
+    }))
+    .filter(b => b.originalText && b.translatedText);
+
+  // Ringkasan bahasa untuk ditampilkan di chip UI: kalau semua blok bahasanya
+  // sama, tampilkan nama bahasa itu. Kalau campuran beberapa bahasa, gabungkan jadi 1 label.
+  const distinctLanguages = [...new Set(blocks.map(b => b.originalLanguage).filter(Boolean))];
+  let detectedLanguage = '';
+  if (distinctLanguages.length === 1) {
+    detectedLanguage = distinctLanguages[0];
+  } else if (distinctLanguages.length > 1) {
+    detectedLanguage = distinctLanguages.join(' + ');
+  }
+
+  return {
+    detectedLanguage,
+    blocks
+  };
+}
+
 
 app.post("/api/translate", translateLimiter, async (req, res) => {
   console.log(`📥 Request: ${req.body?.sourceLang || 'AUTO'} → ${req.body?.targetLang}`);
@@ -451,6 +475,7 @@ app.post("/api/translate-image", imageTranslateLimiter, async (req, res) => {
         return res.json({ detectedLanguage: "", blocks: [], extractedText: "", translation: "", romanization: "" });
       }
 
+      // Gabungan semua teks (dipakai untuk disimpan ke history — bukan untuk ditampilkan overlay)
       const extractedText = blocks.map(b => b.originalText).join('\n');
       const translation = blocks.map(b => b.translatedText).join('\n');
 
