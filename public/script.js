@@ -53,6 +53,8 @@
   let convLangB = 'EN'; // Bahasa lawan bicara (panel atas, dibalik 180°)
   let convRecognitionInstance = null; // Instance STT terpisah dari mic utama, khusus conversation mode
   let convListeningSide = null; // 'A' | 'B' | null — sisi mana yang sedang merekam
+  let currencyRates = null; // Cache kurs (relatif ke USD), diisi setelah fetch pertama
+  let currencyRatesFetchedAt = 0; // Timestamp cache, dipakai supaya tidak fetch berulang tiap buka layar
   let imageTranslateTargetLang = 'EN'; // Target khusus layar translate foto, selalu reset ke EN tiap buka foto baru
   let lastCapturedPhoto = null; // Foto terakhir yang diambil, dipakai kalau target bahasa diganti di layar hasil
   let imageTranslateCache = {}; // Cache hasil per bahasa target untuk foto yang sedang aktif — hindari panggil API ulang kalau user gonta-ganti balik ke bahasa yang sama
@@ -92,6 +94,41 @@
   const convDisplayB = document.getElementById('convDisplayB');
   const convMicA = document.getElementById('convMicA');
   const convMicB = document.getElementById('convMicB');
+
+  // Travel Tools Hub
+  const travelToolsBtn = document.getElementById('travelToolsBtn');
+  const travelToolsOverlay = document.getElementById('travelToolsOverlay');
+  const backFromTravelToolsBtn = document.getElementById('backFromTravelToolsBtn');
+  const openUnitConverterBtn = document.getElementById('openUnitConverterBtn');
+
+  // Konverter Satuan
+  const unitConverterOverlay = document.getElementById('unitConverterOverlay');
+  const backFromUnitConverterBtn = document.getElementById('backFromUnitConverterBtn');
+  const unitCategoryTabs = document.getElementById('unitCategoryTabs');
+  const unitInputFrom = document.getElementById('unitInputFrom');
+  const unitInputTo = document.getElementById('unitInputTo');
+  const unitLabelFrom = document.getElementById('unitLabelFrom');
+  const unitLabelTo = document.getElementById('unitLabelTo');
+  const unitSwapBtn = document.getElementById('unitSwapBtn');
+
+  // Info Tipping
+  const openTippingInfoBtn = document.getElementById('openTippingInfoBtn');
+  const tippingInfoOverlay = document.getElementById('tippingInfoOverlay');
+  const backFromTippingInfoBtn = document.getElementById('backFromTippingInfoBtn');
+  const tippingSearchInput = document.getElementById('tippingSearchInput');
+  const tippingListContainer = document.getElementById('tippingListContainer');
+  const showToLocalBtn = document.getElementById('showToLocalBtn');
+  const showToLocalOverlay = document.getElementById('showToLocalOverlay');
+  const showToLocalText = document.getElementById('showToLocalText');
+  const openCurrencyCalcBtn = document.getElementById('openCurrencyCalcBtn');
+  const currencyCalcOverlay = document.getElementById('currencyCalcOverlay');
+  const backFromCurrencyCalcBtn = document.getElementById('backFromCurrencyCalcBtn');
+  const currencyInputFrom = document.getElementById('currencyInputFrom');
+  const currencyInputTo = document.getElementById('currencyInputTo');
+  const currencySelectFrom = document.getElementById('currencySelectFrom');
+  const currencySelectTo = document.getElementById('currencySelectTo');
+  const currencySwapBtn = document.getElementById('currencySwapBtn');
+  const currencyRateInfo = document.getElementById('currencyRateInfo');
   
   // Speakers / Copies
   const speakSourceBtn = document.getElementById('speakSourceBtn');
@@ -736,6 +773,292 @@ async function translateConvUtterance(speakingSide, transcript) {
   }
 }
 
+  // ---- TRAVEL TOOLS HUB ----
+  function openTravelToolsHub() {
+    travelToolsOverlay.classList.add('active');
+  }
+
+  function closeTravelToolsHub() {
+    travelToolsOverlay.classList.remove('active');
+  }
+
+  // ---- KONVERTER SATUAN ----
+  // Semua konversi murni matematika lokal — tidak butuh internet/API sama sekali.
+  const UNIT_CONVERTERS = {
+    distance: {
+      labelA: 'Kilometer (km)',
+      labelB: 'Mil (miles)',
+      aToB: (km) => km * 0.621371,
+      bToA: (mi) => mi / 0.621371
+    },
+    temperature: {
+      labelA: 'Celsius (°C)',
+      labelB: 'Fahrenheit (°F)',
+      aToB: (c) => (c * 9 / 5) + 32,
+      bToA: (f) => (f - 32) * 5 / 9
+    },
+    weight: {
+      labelA: 'Kilogram (kg)',
+      labelB: 'Pon (lbs)',
+      aToB: (kg) => kg * 2.20462,
+      bToA: (lbs) => lbs / 2.20462
+    }
+  };
+
+  let currentUnitCategory = 'distance';
+
+  function roundNice(num) {
+    // Bulatkan ke maks 2 desimal, tapi buang trailing zero yang tidak perlu (3.00 -> 3)
+    return Math.round(num * 100) / 100;
+  }
+
+  function openUnitConverter() {
+    switchUnitCategory('distance');
+    unitCategoryTabs.querySelectorAll('.segment-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.category === 'distance');
+    });
+    unitConverterOverlay.classList.add('active');
+  }
+
+  function closeUnitConverter() {
+    unitConverterOverlay.classList.remove('active');
+  }
+
+  function switchUnitCategory(category) {
+    currentUnitCategory = category;
+    const conv = UNIT_CONVERTERS[category];
+    unitLabelFrom.textContent = conv.labelA;
+    unitLabelTo.textContent = conv.labelB;
+    unitInputFrom.value = '';
+    unitInputTo.value = '';
+  }
+
+  function handleUnitSwap() {
+    const conv = UNIT_CONVERTERS[currentUnitCategory];
+    const tempLabel = conv.labelA;
+    conv.labelA = conv.labelB;
+    conv.labelB = tempLabel;
+
+    const tempFn = conv.aToB;
+    conv.aToB = conv.bToA;
+    conv.bToA = tempFn;
+
+    unitLabelFrom.textContent = conv.labelA;
+    unitLabelTo.textContent = conv.labelB;
+
+    const tempVal = unitInputFrom.value;
+    unitInputFrom.value = unitInputTo.value;
+    unitInputTo.value = tempVal;
+  }
+
+  // ---- INFO TIPPING ----
+  // Data statis (tidak butuh internet) — mencakup destinasi traveling populer.
+  // Kebiasaan tipping bisa berubah seiring waktu, jadi ini panduan umum, bukan aturan mutlak.
+  const TIPPING_DATA = [
+    { country: 'Jepang', flag: '🇯🇵', info: 'TIDAK ada budaya tipping — bahkan bisa dianggap tidak sopan. Pelayanan yang baik sudah termasuk standar.' },
+    { country: 'Korea Selatan', flag: '🇰🇷', info: 'Umumnya tidak diharapkan. Beberapa hotel/restoran mewah kadang menerima, tapi bukan kewajiban.' },
+    { country: 'China', flag: '🇨🇳', info: 'Umumnya tidak dilakukan, terutama di restoran lokal. Bisa membuat pelayan bingung/menolak.' },
+    { country: 'Hong Kong', flag: '🇭🇰', info: 'Banyak restoran sudah menambahkan service charge 10%. Tip tambahan opsional, membulatkan bill sudah cukup.' },
+    { country: 'Taiwan', flag: '🇹🇼', info: 'Tidak wajib. Beberapa restoran sudah termasuk service charge 10%.' },
+    { country: 'Thailand', flag: '🇹🇭', info: 'Tidak wajib tapi diapresiasi. Restoran/hotel: bulatkan tagihan atau 10%. Pijat: 50-100 baht.' },
+    { country: 'Vietnam', flag: '🇻🇳', info: 'Tidak wajib, tapi mulai umum di area turis. Restoran: bulatkan tagihan atau 10%.' },
+    { country: 'Singapura', flag: '🇸🇬', info: 'Umumnya tidak diharapkan — banyak restoran sudah termasuk service charge 10%. Dilarang di beberapa tempat.' },
+    { country: 'Malaysia', flag: '🇲🇾', info: 'Tidak wajib. Restoran besar biasanya sudah termasuk service charge 10%.' },
+    { country: 'Filipina', flag: '🇵🇭', info: 'Diapresiasi, restoran 10% kalau belum termasuk service charge. Porter/supir: sesuai kebijaksanaan.' },
+    { country: 'Indonesia', flag: '🇮🇩', info: 'Tidak wajib. Restoran biasa: bulatkan tagihan. Hotel/resort: Rp10-20 ribu untuk porter.' },
+    { country: 'India', flag: '🇮🇳', info: 'Restoran: 5-10% kalau belum termasuk service charge. Supir/porter: tip kecil diapresiasi.' },
+    { country: 'Uni Emirat Arab (Dubai)', flag: '🇦🇪', info: 'Restoran: 10-15% kalau belum termasuk service charge. Taksi: bulatkan tagihan.' },
+    { country: 'Arab Saudi', flag: '🇸🇦', info: 'Umumnya diapresiasi tapi tidak wajib. Restoran: 10% kalau belum termasuk service charge.' },
+    { country: 'Turki', flag: '🇹🇷', info: 'Diapresiasi. Restoran: 5-10%. Hammam/spa: 10-15%.' },
+    { country: 'Mesir', flag: '🇪🇬', info: 'Sangat umum dan sering diharapkan (disebut "baksheesh") — hampir semua layanan, termasuk toilet umum.' },
+    { country: 'Amerika Serikat', flag: '🇺🇸', info: 'WAJIB secara sosial. Restoran: 15-20%. Taksi: 10-15%. Hotel porter: $1-2/tas. Bartender: $1-2/minuman.' },
+    { country: 'Kanada', flag: '🇨🇦', info: 'Mirip Amerika Serikat. Restoran: 15-18%. Taksi: 10-15%.' },
+    { country: 'Meksiko', flag: '🇲🇽', info: 'Umum dan diharapkan. Restoran: 10-15%. Hotel porter: sekitar $1-2/tas.' },
+    { country: 'Brasil', flag: '🇧🇷', info: 'Restoran biasanya sudah termasuk service charge 10%. Tip tambahan opsional.' },
+    { country: 'Inggris', flag: '🇬🇧', info: 'Restoran: 10-12.5% kalau belum termasuk service charge. Taksi: bulatkan tagihan. Pub: tidak wajib.' },
+    { country: 'Prancis', flag: '🇫🇷', info: 'Service charge biasanya sudah termasuk harga ("service compris"). Tip kecil tambahan diapresiasi tapi tidak wajib.' },
+    { country: 'Jerman', flag: '🇩🇪', info: 'Bulatkan tagihan atau tambah 5-10%. Diberikan langsung ke pelayan, bukan ditinggal di meja.' },
+    { country: 'Italia', flag: '🇮🇹', info: 'Banyak restoran sudah punya "coperto" (biaya tempat duduk). Tip tambahan kecil opsional, tidak wajib.' },
+    { country: 'Spanyol', flag: '🇪🇸', info: 'Tidak wajib. Bulatkan tagihan atau tambah sedikit untuk pelayanan bagus.' },
+    { country: 'Belanda', flag: '🇳🇱', info: 'Service charge biasanya sudah termasuk. Bulatkan tagihan untuk pelayanan bagus.' },
+    { country: 'Swiss', flag: '🇨🇭', info: 'Service charge sudah termasuk harga secara hukum. Tip tambahan tidak wajib.' },
+    { country: 'Australia', flag: '🇦🇺', info: 'Tidak wajib — gaji pekerja sudah relatif tinggi. Restoran mewah: 10% opsional untuk pelayanan sangat baik.' },
+    { country: 'Selandia Baru', flag: '🇳🇿', info: 'Umumnya tidak diharapkan sama sekali, mirip Australia.' },
+    { country: 'Rusia', flag: '🇷🇺', info: 'Restoran: 10% diapresiasi kalau belum termasuk service charge.' },
+    { country: 'Afrika Selatan', flag: '🇿🇦', info: 'Restoran: 10-15%. Petugas SPBU/porter: tip kecil diharapkan.' },
+    { country: 'Maladewa', flag: '🇲🇻', info: 'Banyak resort sudah termasuk service charge 10%. Tip tambahan untuk staf opsional tapi diapresiasi.' },
+    { country: 'Qatar', flag: '🇶🇦', info: 'Restoran: 10% kalau belum termasuk service charge. Tidak wajib tapi umum di area turis.' }
+  ];
+
+  function openTippingInfo() {
+    tippingSearchInput.value = '';
+    renderTippingList('');
+    tippingInfoOverlay.classList.add('active');
+  }
+
+  function closeTippingInfo() {
+    tippingInfoOverlay.classList.remove('active');
+  }
+
+  function renderTippingList(query) {
+    tippingListContainer.innerHTML = '';
+    const q = query.toLowerCase().trim();
+
+    const filtered = TIPPING_DATA.filter(item => item.country.toLowerCase().includes(q));
+
+    if (filtered.length === 0) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.style.textAlign = 'center';
+      emptyDiv.style.padding = '32px 16px';
+      emptyDiv.style.color = 'rgba(255,255,255,0.35)';
+      emptyDiv.style.fontSize = '14px';
+      emptyDiv.textContent = 'Negara tidak ditemukan';
+      tippingListContainer.appendChild(emptyDiv);
+      return;
+    }
+
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'tipping-item';
+      card.innerHTML = `
+        <span class="tipping-item-flag">${item.flag}</span>
+        <div class="tipping-item-text">
+          <div class="tipping-item-country">${item.country}</div>
+          <div class="tipping-item-info">${item.info}</div>
+        </div>
+      `;
+      tippingListContainer.appendChild(card);
+    });
+  }
+
+  function handleShowToLocal() {
+    const text = targetTextEl.textContent.trim();
+    if (!text || text === 'Hasil Terjemahan' || text === 'Menerjemahkan...') {
+      showToast('Tidak ada teks untuk ditampilkan');
+      return;
+    }
+
+    showToLocalText.textContent = text;
+    adjustFontSize(showToLocalText, text);
+    showToLocalOverlay.classList.add('active');
+  }
+
+  function closeShowToLocal() {
+    showToLocalOverlay.classList.remove('active');
+  }
+
+  // ---- KALKULATOR MATA UANG ----
+  // Data kurs dari Frankfurter API (sumber: European Central Bank) — gratis, tanpa API key, CORS-enabled.
+  // Cakupan terbatas ~30 mata uang utama (tidak semua mata uang dunia tersedia).
+  const CURRENCY_LIST = [
+    { code: 'IDR', name: 'Rupiah Indonesia', flag: '🇮🇩' },
+    { code: 'USD', name: 'Dolar Amerika', flag: '🇺🇸' },
+    { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+    { code: 'GBP', name: 'Poundsterling Inggris', flag: '🇬🇧' },
+    { code: 'JPY', name: 'Yen Jepang', flag: '🇯🇵' },
+    { code: 'KRW', name: 'Won Korea Selatan', flag: '🇰🇷' },
+    { code: 'CNY', name: 'Yuan China', flag: '🇨🇳' },
+    { code: 'SGD', name: 'Dolar Singapura', flag: '🇸🇬' },
+    { code: 'MYR', name: 'Ringgit Malaysia', flag: '🇲🇾' },
+    { code: 'THB', name: 'Baht Thailand', flag: '🇹🇭' },
+    { code: 'PHP', name: 'Peso Filipina', flag: '🇵🇭' },
+    { code: 'INR', name: 'Rupee India', flag: '🇮🇳' },
+    { code: 'AUD', name: 'Dolar Australia', flag: '🇦🇺' },
+    { code: 'HKD', name: 'Dolar Hong Kong', flag: '🇭🇰' },
+    { code: 'CHF', name: 'Franc Swiss', flag: '🇨🇭' },
+    { code: 'CAD', name: 'Dolar Kanada', flag: '🇨🇦' },
+    { code: 'NZD', name: 'Dolar Selandia Baru', flag: '🇳🇿' },
+    { code: 'TRY', name: 'Lira Turki', flag: '🇹🇷' },
+    { code: 'ZAR', name: 'Rand Afrika Selatan', flag: '🇿🇦' },
+    { code: 'MXN', name: 'Peso Meksiko', flag: '🇲🇽' }
+  ];
+
+  function populateCurrencySelects() {
+    const optionsHtml = CURRENCY_LIST.map(c => `<option value="${c.code}">${c.flag} ${c.code} — ${c.name}</option>`).join('');
+    currencySelectFrom.innerHTML = optionsHtml;
+    currencySelectTo.innerHTML = optionsHtml;
+    currencySelectFrom.value = 'USD';
+    currencySelectTo.value = 'IDR';
+  }
+
+  async function fetchCurrencyRates(forceRefresh) {
+    const ONE_HOUR = 60 * 60 * 1000;
+    if (!forceRefresh && currencyRates && (Date.now() - currencyRatesFetchedAt) < ONE_HOUR) {
+      return currencyRates; // masih fresh, tidak perlu fetch ulang
+    }
+
+    const response = await fetch('https://api.frankfurter.dev/v2/rates?base=USD');
+    if (!response.ok) {
+      throw new Error('Gagal mengambil data kurs (status ' + response.status + ')');
+    }
+    const data = await response.json();
+    if (!data || !data.rates || typeof data.rates !== 'object') {
+      throw new Error('Format data kurs tidak sesuai dugaan (API mungkin berubah).');
+    }
+    currencyRates = data.rates;
+    currencyRates.USD = 1; // base currency, tidak disertakan otomatis di response
+    currencyRatesFetchedAt = Date.now();
+    return currencyRates;
+  }
+
+  function convertCurrency(amount, fromCode, toCode) {
+    if (!currencyRates || !currencyRates[fromCode] || !currencyRates[toCode]) return null;
+    const usdAmount = amount / currencyRates[fromCode];
+    return usdAmount * currencyRates[toCode];
+  }
+
+  function updateCurrencyRateInfoText() {
+    const from = currencySelectFrom.value;
+    const to = currencySelectTo.value;
+    if (!currencyRates || !currencyRates[from] || !currencyRates[to]) return;
+    const rate = convertCurrency(1, from, to);
+    currencyRateInfo.textContent = `1 ${from} = ${roundNice(rate).toLocaleString('id-ID')} ${to}`;
+  }
+
+  function recalculateCurrencyFromInput() {
+    const val = parseFloat(currencyInputFrom.value);
+    if (isNaN(val)) { currencyInputTo.value = ''; return; }
+    const result = convertCurrency(val, currencySelectFrom.value, currencySelectTo.value);
+    if (result !== null) {
+      currencyInputTo.value = roundNice(result);
+    }
+  }
+
+  async function openCurrencyCalculator() {
+    currencyCalcOverlay.classList.add('active');
+    currencyRateInfo.textContent = 'Memuat kurs...';
+
+    if (!navigator.onLine) {
+      currencyRateInfo.textContent = 'Butuh koneksi internet untuk mengambil kurs terbaru.';
+      return;
+    }
+
+    try {
+      await fetchCurrencyRates(false);
+      updateCurrencyRateInfoText();
+      recalculateCurrencyFromInput();
+    } catch (e) {
+      console.error('Currency rate fetch error:', e);
+      currencyRateInfo.textContent = 'Gagal mengambil kurs. Coba lagi nanti.';
+    }
+  }
+
+  function closeCurrencyCalculator() {
+    currencyCalcOverlay.classList.remove('active');
+  }
+
+  function handleCurrencySwap() {
+    const tempCode = currencySelectFrom.value;
+    currencySelectFrom.value = currencySelectTo.value;
+    currencySelectTo.value = tempCode;
+
+    const tempVal = currencyInputFrom.value;
+    currencyInputFrom.value = currencyInputTo.value;
+    currencyInputTo.value = tempVal;
+
+    updateCurrencyRateInfoText();
+  }
+
   function queueTranslation(text) {
     if (translateDebounceTimeout) {
       clearTimeout(translateDebounceTimeout);
@@ -1320,6 +1643,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     loadHistoryFromStorage();
     updateLangPills();
     stopSpeechRecognition();
+    populateCurrencySelects();
     updateOnlineStatus();
     window.addEventListener('online', function () {
       updateOnlineStatus();
@@ -1408,6 +1732,70 @@ async function translateConvUtterance(speakingSide, transcript) {
     convLangBPill.addEventListener('click', () => openLanguageSheet('convB'));
     convMicA.addEventListener('click', () => startConvListening('A'));
     convMicB.addEventListener('click', () => startConvListening('B'));
+
+  // Travel Tools Hub
+  travelToolsBtn.addEventListener('click', openTravelToolsHub);
+  backFromTravelToolsBtn.addEventListener('click', closeTravelToolsHub);
+  openUnitConverterBtn.addEventListener('click', () => {
+    closeTravelToolsHub();
+    openUnitConverter();
+  });
+
+  // Konverter Satuan
+  backFromUnitConverterBtn.addEventListener('click', closeUnitConverter);
+  unitCategoryTabs.addEventListener('click', function (e) {
+    const btn = e.target.closest('.segment-btn');
+    if (!btn) return;
+    unitCategoryTabs.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    switchUnitCategory(btn.dataset.category);
+  });
+  unitInputFrom.addEventListener('input', function () {
+    const val = parseFloat(this.value);
+    if (isNaN(val)) { unitInputTo.value = ''; return; }
+    unitInputTo.value = roundNice(UNIT_CONVERTERS[currentUnitCategory].aToB(val));
+  });
+  unitInputTo.addEventListener('input', function () {
+    const val = parseFloat(this.value);
+    if (isNaN(val)) { unitInputFrom.value = ''; return; }
+    unitInputFrom.value = roundNice(UNIT_CONVERTERS[currentUnitCategory].bToA(val));
+  });
+  unitSwapBtn.addEventListener('click', handleUnitSwap);
+
+  openTippingInfoBtn.addEventListener('click', () => {
+    closeTravelToolsHub();
+    openTippingInfo();
+  });
+  backFromTippingInfoBtn.addEventListener('click', closeTippingInfo);
+  tippingSearchInput.addEventListener('input', function () {
+    renderTippingList(this.value);
+  });
+
+  showToLocalBtn.addEventListener('click', handleShowToLocal);
+  showToLocalOverlay.addEventListener('click', closeShowToLocal); 
+  openCurrencyCalcBtn.addEventListener('click', () => {
+    closeTravelToolsHub();
+    openCurrencyCalculator();
+  });
+  backFromCurrencyCalcBtn.addEventListener('click', closeCurrencyCalculator);
+  currencySwapBtn.addEventListener('click', handleCurrencySwap);
+  currencyInputFrom.addEventListener('input', recalculateCurrencyFromInput);
+  currencyInputTo.addEventListener('input', function () {
+    const val = parseFloat(this.value);
+    if (isNaN(val)) { currencyInputFrom.value = ''; return; }
+    const result = convertCurrency(val, currencySelectTo.value, currencySelectFrom.value);
+    if (result !== null) {
+      currencyInputFrom.value = roundNice(result);
+    }
+  });
+  currencySelectFrom.addEventListener('change', function () {
+    updateCurrencyRateInfoText();
+    recalculateCurrencyFromInput();
+  });
+  currencySelectTo.addEventListener('change', function () {
+    updateCurrencyRateInfoText();
+    recalculateCurrencyFromInput();
+  });
 
     // History overlay navigation
     historyBtn.addEventListener('click', () => {
