@@ -159,7 +159,7 @@ html, body {
   width: 100%;
   padding: 8px 16px;
   overflow-y: auto;
-  margin: 0; /* â† HAPUS margin-top dan margin-bottom */
+  margin: 0; /* ← HAPUS margin-top dan margin-bottom */
 }
 
 .textarea-source {
@@ -1075,7 +1075,7 @@ html, body {
 /* ==================== CONVERSATION MODE ==================== */
 
 .conversation-screen {
-  padding-top: 0; /* override .overlay-screen â€” safe-area ditangani per-panel di sini */
+  padding-top: 0; /* override .overlay-screen — safe-area ditangani per-panel di sini */
 }
 
 .conversation-panel {
@@ -1177,6 +1177,7 @@ html, body {
   transform: scale(0.9);
 }
 
+/* Sama persis dengan mic halaman utama: tetap putih, cuma sedikit membesar + glow */
 .conv-mic-btn.listening {
   background-color: #ffffff;
   color: var(--ios-blue);
@@ -1317,12 +1318,6 @@ html, body {
   -webkit-appearance: none;
 }
 
-.unit-label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 600;
-}
-
 .unit-swap-btn {
   width: 40px;
   height: 40px;
@@ -1339,6 +1334,112 @@ html, body {
 
 .unit-swap-btn:active {
   transform: scale(0.9);
+}
+
+/* ==================== DROPDOWN SELECT GENERIK (dipakai konverter satuan + mata uang) ==================== */
+
+.app-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  width: 100%;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.app-select-chevron {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.app-select-btn:active {
+  opacity: 0.6;
+}
+
+.currency-rate-info {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+/* ==================== FRASA DARURAT ==================== */
+
+.emergency-lang-picker {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+
+.emergency-phrase-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emergency-phrase-card {
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.emergency-phrase-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.emergency-phrase-id {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 4px;
+}
+
+.emergency-phrase-translated {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.emergency-phrase-speak-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--ios-blue);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.emergency-phrase-speak-btn:active {
+  transform: scale(0.9);
+}
+
+.emergency-disclaimer {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  line-height: 1.4;
+  padding: 14px 8px 4px;
 }
 
 /* ==================== INFO TIPPING ==================== */
@@ -1386,40 +1487,7 @@ html, body {
   line-height: 1.4;
 }
 
-.conv-exit-btn {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 19px;
-  border: 2px solid #0d0d0f;
-  background-color: #2c2c30;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.conv-exit-btn:active {
-  transform: translateY(-50%) scale(0.92);
-}
-
-/* Panel atas dibalik 180Â° â€” padding-bottom di sini jadi jarak dari TEPI ATAS
-   layar fisik (notch/Dynamic Island) setelah rotasi, supaya mic tidak kepotong */
-.conversation-panel-top .conversation-panel-content {
-  padding-bottom: calc(24px + env(safe-area-inset-top, 0px));
-}
-
-/* Panel bawah â€” jarak dari tepi bawah fisik (home indicator) */
-.conversation-panel-bottom .conversation-panel-content {
-  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-}
+/* ==================== TUNJUKKAN KE LOKAL (FULLSCREEN) ==================== */
 
 .show-to-local-screen {
   position: fixed;
@@ -1447,6 +1515,8 @@ html, body {
   overflow-y: auto;
 }
 
+/* Ukuran jauh lebih besar dari size-large/medium/small halaman utama —
+   ini memang didesain untuk dibaca dari jarak/oleh orang lain */
 .show-to-local-text.size-large {
   font-size: 56px;
 }
@@ -1466,27 +1536,37 @@ html, body {
   font-size: 13px;
 }
 
-.currency-select {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: rgba(255, 255, 255, 0.7);
+.conv-exit-btn {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 19px;
+  border: 2px solid #0d0d0f;
+  background-color: #2c2c30;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
   cursor: pointer;
 }
 
-.currency-select option {
-  background-color: #1c1c1e;
-  color: #ffffff;
+.conv-exit-btn:active {
+  transform: translateY(-50%) scale(0.92);
 }
 
-.currency-rate-info {
-  margin-top: 8px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.45);
-  text-align: center;
+/* Panel atas dibalik 180° — padding-bottom di sini jadi jarak dari TEPI ATAS
+   layar fisik (notch/Dynamic Island) setelah rotasi, supaya mic tidak kepotong */
+.conversation-panel-top .conversation-panel-content {
+  padding-bottom: calc(24px + env(safe-area-inset-top, 0px));
+}
+
+/* Panel bawah — jarak dari tepi bawah fisik (home indicator) */
+.conversation-panel-bottom .conversation-panel-content {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }

@@ -444,6 +444,7 @@
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
+
         <button class="tool-menu-item" id="openCurrencyCalcBtn">
           <div class="tool-menu-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -455,6 +456,23 @@
           <div class="tool-menu-text">
             <span class="tool-menu-title">Kalkulator Mata Uang</span>
             <span class="tool-menu-subtitle">Kurs real-time</span>
+          </div>
+          <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+
+        <button class="tool-menu-item" id="openEmergencyPhrasesBtn">
+          <div class="tool-menu-icon" style="background-color: #e0304f;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4.5 8-11.8A8 8 0 0 0 4 10.2C4 17.5 12 22 12 22Z"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="tool-menu-text">
+            <span class="tool-menu-title">Frasa Darurat</span>
+            <span class="tool-menu-subtitle">Offline, 30+ bahasa</span>
           </div>
           <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
@@ -488,7 +506,10 @@
         <div class="unit-converter-card">
           <div class="unit-input-group">
             <input type="number" inputmode="decimal" class="unit-input" id="unitInputFrom" placeholder="0" />
-            <span class="unit-label" id="unitLabelFrom">Kilometer (km)</span>
+            <button type="button" class="app-select-btn" id="unitFromPill">
+              <span id="unitFromPillLabel">Kilometer (km)</span>
+              <svg class="app-select-chevron" xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
 
           <button class="unit-swap-btn" id="unitSwapBtn" aria-label="Tukar arah">
@@ -502,7 +523,10 @@
 
           <div class="unit-input-group">
             <input type="number" inputmode="decimal" class="unit-input" id="unitInputTo" placeholder="0" />
-            <span class="unit-label" id="unitLabelTo">Mil (miles)</span>
+            <button type="button" class="app-select-btn" id="unitToPill">
+              <span id="unitToPillLabel">Mil (miles)</span>
+              <svg class="app-select-chevron" xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -553,7 +577,10 @@
         <div class="unit-converter-card">
           <div class="unit-input-group">
             <input type="number" inputmode="decimal" class="unit-input" id="currencyInputFrom" placeholder="0" />
-            <select class="currency-select" id="currencySelectFrom"></select>
+            <button type="button" class="app-select-btn" id="currencyFromPill">
+              <span id="currencyFromPillLabel">🇺🇸 USD</span>
+              <svg class="app-select-chevron" xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
 
           <button class="unit-swap-btn" id="currencySwapBtn" aria-label="Tukar arah">
@@ -567,11 +594,43 @@
 
           <div class="unit-input-group">
             <input type="number" inputmode="decimal" class="unit-input" id="currencyInputTo" placeholder="0" />
-            <select class="currency-select" id="currencySelectTo"></select>
+            <button type="button" class="app-select-btn" id="currencyToPill">
+              <span id="currencyToPillLabel">🇮🇩 IDR</span>
+              <svg class="app-select-chevron" xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
           </div>
 
           <div class="currency-rate-info" id="currencyRateInfo">Memuat kurs...</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ==================== SCREEN: FRASA DARURAT ==================== -->
+    <div class="overlay-screen" id="emergencyPhrasesOverlay">
+      <header class="overlay-header">
+        <button class="back-text-btn" id="backFromEmergencyPhrasesBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Kembali
+        </button>
+        <h2 class="overlay-title">Frasa Darurat</h2>
+        <div style="width: 60px;"></div>
+      </header>
+
+      <div class="tool-content">
+        <div class="emergency-lang-picker">
+          <button type="button" class="app-select-btn" id="emergencyLangPill">
+            <span id="emergencyLangPillLabel">🇺🇸 English</span>
+            <svg class="app-select-chevron" xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div class="emergency-phrase-list" id="emergencyPhraseList">
+          <!-- Diisi dinamis oleh JS -->
+        </div>
+
+        <div class="emergency-disclaimer">Terjemahan otomatis — untuk situasi darurat yang serius, tetap usahakan bantuan dari penerjemah manusia atau layanan resmi.</div>
       </div>
     </div>
 

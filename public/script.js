@@ -55,6 +55,11 @@
   let convListeningSide = null; // 'A' | 'B' | null — sisi mana yang sedang merekam
   let currencyRates = null; // Cache kurs (relatif ke USD), diisi setelah fetch pertama
   let currencyRatesFetchedAt = 0; // Timestamp cache, dipakai supaya tidak fetch berulang tiap buka layar
+  let unitFromKey = 'km';
+  let unitToKey = 'mi';
+  let currencyFromCode = 'USD';
+  let currencyToCode = 'IDR';
+  let emergencyLangCode = 'EN';
   let imageTranslateTargetLang = 'EN'; // Target khusus layar translate foto, selalu reset ke EN tiap buka foto baru
   let lastCapturedPhoto = null; // Foto terakhir yang diambil, dipakai kalau target bahasa diganti di layar hasil
   let imageTranslateCache = {}; // Cache hasil per bahasa target untuk foto yang sedang aktif — hindari panggil API ulang kalau user gonta-ganti balik ke bahasa yang sama
@@ -107,8 +112,10 @@
   const unitCategoryTabs = document.getElementById('unitCategoryTabs');
   const unitInputFrom = document.getElementById('unitInputFrom');
   const unitInputTo = document.getElementById('unitInputTo');
-  const unitLabelFrom = document.getElementById('unitLabelFrom');
-  const unitLabelTo = document.getElementById('unitLabelTo');
+  const unitFromPill = document.getElementById('unitFromPill');
+  const unitFromPillLabel = document.getElementById('unitFromPillLabel');
+  const unitToPill = document.getElementById('unitToPill');
+  const unitToPillLabel = document.getElementById('unitToPillLabel');
   const unitSwapBtn = document.getElementById('unitSwapBtn');
 
   // Info Tipping
@@ -117,18 +124,32 @@
   const backFromTippingInfoBtn = document.getElementById('backFromTippingInfoBtn');
   const tippingSearchInput = document.getElementById('tippingSearchInput');
   const tippingListContainer = document.getElementById('tippingListContainer');
+
+  // Tunjukkan ke Lokal
   const showToLocalBtn = document.getElementById('showToLocalBtn');
   const showToLocalOverlay = document.getElementById('showToLocalOverlay');
   const showToLocalText = document.getElementById('showToLocalText');
+
+  // Kalkulator Mata Uang
   const openCurrencyCalcBtn = document.getElementById('openCurrencyCalcBtn');
   const currencyCalcOverlay = document.getElementById('currencyCalcOverlay');
   const backFromCurrencyCalcBtn = document.getElementById('backFromCurrencyCalcBtn');
   const currencyInputFrom = document.getElementById('currencyInputFrom');
   const currencyInputTo = document.getElementById('currencyInputTo');
-  const currencySelectFrom = document.getElementById('currencySelectFrom');
-  const currencySelectTo = document.getElementById('currencySelectTo');
+  const currencyFromPill = document.getElementById('currencyFromPill');
+  const currencyFromPillLabel = document.getElementById('currencyFromPillLabel');
+  const currencyToPill = document.getElementById('currencyToPill');
+  const currencyToPillLabel = document.getElementById('currencyToPillLabel');
   const currencySwapBtn = document.getElementById('currencySwapBtn');
   const currencyRateInfo = document.getElementById('currencyRateInfo');
+
+  // Frasa Darurat
+  const openEmergencyPhrasesBtn = document.getElementById('openEmergencyPhrasesBtn');
+  const emergencyPhrasesOverlay = document.getElementById('emergencyPhrasesOverlay');
+  const backFromEmergencyPhrasesBtn = document.getElementById('backFromEmergencyPhrasesBtn');
+  const emergencyLangPill = document.getElementById('emergencyLangPill');
+  const emergencyLangPillLabel = document.getElementById('emergencyLangPillLabel');
+  const emergencyPhraseList = document.getElementById('emergencyPhraseList');
   
   // Speakers / Copies
   const speakSourceBtn = document.getElementById('speakSourceBtn');
@@ -784,24 +805,37 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   // ---- KONVERTER SATUAN ----
   // Semua konversi murni matematika lokal — tidak butuh internet/API sama sekali.
-  const UNIT_CONVERTERS = {
+  // Tiap kategori punya "satuan dasar" (base) — semua satuan lain dikonversi via base itu,
+  // supaya menambah satuan baru tidak perlu bikin rumus untuk tiap pasangan.
+  const UNIT_CATEGORIES = {
     distance: {
-      labelA: 'Kilometer (km)',
-      labelB: 'Mil (miles)',
-      aToB: (km) => km * 0.621371,
-      bToA: (mi) => mi / 0.621371
+      defaultFrom: 'km',
+      defaultTo: 'mi',
+      units: {
+        km: { name: 'Kilometer (km)', toBase: (v) => v * 1000, fromBase: (v) => v / 1000 },
+        m: { name: 'Meter (m)', toBase: (v) => v, fromBase: (v) => v },
+        mi: { name: 'Mil (miles)', toBase: (v) => v * 1609.34, fromBase: (v) => v / 1609.34 },
+        ft: { name: 'Kaki (feet)', toBase: (v) => v * 0.3048, fromBase: (v) => v / 0.3048 }
+      }
     },
     temperature: {
-      labelA: 'Celsius (°C)',
-      labelB: 'Fahrenheit (°F)',
-      aToB: (c) => (c * 9 / 5) + 32,
-      bToA: (f) => (f - 32) * 5 / 9
+      defaultFrom: 'c',
+      defaultTo: 'f',
+      units: {
+        c: { name: 'Celsius (°C)', toBase: (v) => v, fromBase: (v) => v },
+        f: { name: 'Fahrenheit (°F)', toBase: (v) => (v - 32) * 5 / 9, fromBase: (v) => (v * 9 / 5) + 32 },
+        k: { name: 'Kelvin (K)', toBase: (v) => v - 273.15, fromBase: (v) => v + 273.15 }
+      }
     },
     weight: {
-      labelA: 'Kilogram (kg)',
-      labelB: 'Pon (lbs)',
-      aToB: (kg) => kg * 2.20462,
-      bToA: (lbs) => lbs / 2.20462
+      defaultFrom: 'kg',
+      defaultTo: 'lb',
+      units: {
+        kg: { name: 'Kilogram (kg)', toBase: (v) => v, fromBase: (v) => v },
+        g: { name: 'Gram (g)', toBase: (v) => v / 1000, fromBase: (v) => v * 1000 },
+        lb: { name: 'Pon (lbs)', toBase: (v) => v * 0.453592, fromBase: (v) => v / 0.453592 },
+        oz: { name: 'Ons (oz)', toBase: (v) => v * 0.0283495, fromBase: (v) => v / 0.0283495 }
+      }
     }
   };
 
@@ -813,10 +847,10 @@ async function translateConvUtterance(speakingSide, transcript) {
   }
 
   function openUnitConverter() {
-    switchUnitCategory('distance');
     unitCategoryTabs.querySelectorAll('.segment-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.category === 'distance');
     });
+    switchUnitCategory('distance');
     unitConverterOverlay.classList.add('active');
   }
 
@@ -826,25 +860,41 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   function switchUnitCategory(category) {
     currentUnitCategory = category;
-    const conv = UNIT_CONVERTERS[category];
-    unitLabelFrom.textContent = conv.labelA;
-    unitLabelTo.textContent = conv.labelB;
+    const cat = UNIT_CATEGORIES[category];
+
+    unitFromKey = cat.defaultFrom;
+    unitToKey = cat.defaultTo;
+    unitFromPillLabel.textContent = cat.units[unitFromKey].name;
+    unitToPillLabel.textContent = cat.units[unitToKey].name;
+
     unitInputFrom.value = '';
     unitInputTo.value = '';
   }
 
+  function convertUnit(amount, fromKey, toKey) {
+    const cat = UNIT_CATEGORIES[currentUnitCategory];
+    if (!cat.units[fromKey] || !cat.units[toKey]) return null;
+    const baseVal = cat.units[fromKey].toBase(amount);
+    return cat.units[toKey].fromBase(baseVal);
+  }
+
+  function recalculateUnitFromInput() {
+    const val = parseFloat(unitInputFrom.value);
+    if (isNaN(val)) { unitInputTo.value = ''; return; }
+    const result = convertUnit(val, unitFromKey, unitToKey);
+    if (result !== null) {
+      unitInputTo.value = roundNice(result);
+    }
+  }
+
   function handleUnitSwap() {
-    const conv = UNIT_CONVERTERS[currentUnitCategory];
-    const tempLabel = conv.labelA;
-    conv.labelA = conv.labelB;
-    conv.labelB = tempLabel;
+    const tempKey = unitFromKey;
+    unitFromKey = unitToKey;
+    unitToKey = tempKey;
 
-    const tempFn = conv.aToB;
-    conv.aToB = conv.bToA;
-    conv.bToA = tempFn;
-
-    unitLabelFrom.textContent = conv.labelA;
-    unitLabelTo.textContent = conv.labelB;
+    const cat = UNIT_CATEGORIES[currentUnitCategory];
+    unitFromPillLabel.textContent = cat.units[unitFromKey].name;
+    unitToPillLabel.textContent = cat.units[unitToKey].name;
 
     const tempVal = unitInputFrom.value;
     unitInputFrom.value = unitInputTo.value;
@@ -931,16 +981,20 @@ async function translateConvUtterance(speakingSide, transcript) {
     });
   }
 
+  // ---- TUNJUKKAN KE LOKAL ----
+  function showFullscreenText(text) {
+    showToLocalText.textContent = text;
+    adjustFontSize(showToLocalText, text); // reuse fungsi yang sama, cuma beda skala CSS-nya
+    showToLocalOverlay.classList.add('active');
+  }
+
   function handleShowToLocal() {
     const text = targetTextEl.textContent.trim();
     if (!text || text === 'Hasil Terjemahan' || text === 'Menerjemahkan...') {
       showToast('Tidak ada teks untuk ditampilkan');
       return;
     }
-
-    showToLocalText.textContent = text;
-    adjustFontSize(showToLocalText, text);
-    showToLocalOverlay.classList.add('active');
+    showFullscreenText(text);
   }
 
   function closeShowToLocal() {
@@ -974,11 +1028,14 @@ async function translateConvUtterance(speakingSide, transcript) {
   ];
 
   function populateCurrencySelects() {
-    const optionsHtml = CURRENCY_LIST.map(c => `<option value="${c.code}">${c.flag} ${c.code} — ${c.name}</option>`).join('');
-    currencySelectFrom.innerHTML = optionsHtml;
-    currencySelectTo.innerHTML = optionsHtml;
-    currencySelectFrom.value = 'USD';
-    currencySelectTo.value = 'IDR';
+    updateCurrencyPillLabels();
+  }
+
+  function updateCurrencyPillLabels() {
+    const fromC = CURRENCY_LIST.find(c => c.code === currencyFromCode);
+    const toC = CURRENCY_LIST.find(c => c.code === currencyToCode);
+    currencyFromPillLabel.textContent = fromC ? `${fromC.flag} ${fromC.code}` : currencyFromCode;
+    currencyToPillLabel.textContent = toC ? `${toC.flag} ${toC.code}` : currencyToCode;
   }
 
   async function fetchCurrencyRates(forceRefresh) {
@@ -992,10 +1049,25 @@ async function translateConvUtterance(speakingSide, transcript) {
       throw new Error('Gagal mengambil data kurs (status ' + response.status + ')');
     }
     const data = await response.json();
-    if (!data || !data.rates || typeof data.rates !== 'object') {
+
+    // v2 Frankfurter API mengembalikan ARRAY datar, satu baris per mata uang —
+    // bukan object {rates: {...}} seperti v1. Bentuknya: [{quote: "EUR", rate: 0.87}, ...]
+    if (!Array.isArray(data)) {
       throw new Error('Format data kurs tidak sesuai dugaan (API mungkin berubah).');
     }
-    currencyRates = data.rates;
+
+    const ratesMap = {};
+    data.forEach(row => {
+      if (row && row.quote && typeof row.rate === 'number') {
+        ratesMap[row.quote] = row.rate;
+      }
+    });
+
+    if (Object.keys(ratesMap).length === 0) {
+      throw new Error('Data kurs kosong dari API.');
+    }
+
+    currencyRates = ratesMap;
     currencyRates.USD = 1; // base currency, tidak disertakan otomatis di response
     currencyRatesFetchedAt = Date.now();
     return currencyRates;
@@ -1008,17 +1080,15 @@ async function translateConvUtterance(speakingSide, transcript) {
   }
 
   function updateCurrencyRateInfoText() {
-    const from = currencySelectFrom.value;
-    const to = currencySelectTo.value;
-    if (!currencyRates || !currencyRates[from] || !currencyRates[to]) return;
-    const rate = convertCurrency(1, from, to);
-    currencyRateInfo.textContent = `1 ${from} = ${roundNice(rate).toLocaleString('id-ID')} ${to}`;
+    if (!currencyRates || !currencyRates[currencyFromCode] || !currencyRates[currencyToCode]) return;
+    const rate = convertCurrency(1, currencyFromCode, currencyToCode);
+    currencyRateInfo.textContent = `1 ${currencyFromCode} = ${roundNice(rate).toLocaleString('id-ID')} ${currencyToCode}`;
   }
 
   function recalculateCurrencyFromInput() {
     const val = parseFloat(currencyInputFrom.value);
     if (isNaN(val)) { currencyInputTo.value = ''; return; }
-    const result = convertCurrency(val, currencySelectFrom.value, currencySelectTo.value);
+    const result = convertCurrency(val, currencyFromCode, currencyToCode);
     if (result !== null) {
       currencyInputTo.value = roundNice(result);
     }
@@ -1048,15 +1118,108 @@ async function translateConvUtterance(speakingSide, transcript) {
   }
 
   function handleCurrencySwap() {
-    const tempCode = currencySelectFrom.value;
-    currencySelectFrom.value = currencySelectTo.value;
-    currencySelectTo.value = tempCode;
+    const tempCode = currencyFromCode;
+    currencyFromCode = currencyToCode;
+    currencyToCode = tempCode;
+    updateCurrencyPillLabels();
 
     const tempVal = currencyInputFrom.value;
     currencyInputFrom.value = currencyInputTo.value;
     currencyInputTo.value = tempVal;
 
     updateCurrencyRateInfoText();
+  }
+
+  // ---- FRASA DARURAT ----
+  // Terjemahan otomatis, bukan hasil verifikasi penutur asli — disclaimer sudah
+  // ditampilkan di UI. 100% offline (data statis, tidak butuh internet sama sekali).
+  const EMERGENCY_LANGUAGES = ['EN', 'KO', 'JA', 'ZH', 'FR', 'DE', 'ES', 'IT', 'RU', 'AR', 'PT', 'TR', 'NL', 'PL', 'SV', 'VI', 'TH', 'HI', 'BG', 'CS', 'DA', 'EL', 'ET', 'FI', 'HU', 'LT', 'LV', 'NB', 'RO', 'SK', 'SL', 'UK'];
+
+  const EMERGENCY_PHRASES = [
+    {
+      idText: 'Tolong!',
+      translations: { EN: 'Help!', KO: '도와주세요!', JA: '助けて!', ZH: '救命!', FR: 'Au secours !', DE: 'Hilfe!', ES: '¡Ayuda!', IT: 'Aiuto!', RU: 'Помогите!', AR: 'النجدة!', PT: 'Socorro!', TR: 'İmdat!', NL: 'Help!', PL: 'Pomocy!', SV: 'Hjälp!', VI: 'Cứu tôi với!', TH: 'ช่วยด้วย!', HI: 'बचाओ!', BG: 'Помощ!', CS: 'Pomoc!', DA: 'Hjælp!', EL: 'Βοήθεια!', ET: 'Appi!', FI: 'Apua!', HU: 'Segítség!', LT: 'Padėkite!', LV: 'Palīgā!', NB: 'Hjelp!', RO: 'Ajutor!', SK: 'Pomoc!', SL: 'Pomagajte!', UK: 'Допоможіть!' }
+    },
+    {
+      idText: 'Saya butuh bantuan',
+      translations: { EN: 'I need help', KO: '도움이 필요해요', JA: '助けが必要です', ZH: '我需要帮助', FR: "J'ai besoin d'aide", DE: 'Ich brauche Hilfe', ES: 'Necesito ayuda', IT: 'Ho bisogno di aiuto', RU: 'Мне нужна помощь', AR: 'أحتاج إلى مساعدة', PT: 'Preciso de ajuda', TR: 'Yardıma ihtiyacım var', NL: 'Ik heb hulp nodig', PL: 'Potrzebuję pomocy', SV: 'Jag behöver hjälp', VI: 'Tôi cần giúp đỡ', TH: 'ฉันต้องการความช่วยเหลือ', HI: 'मुझे मदद चाहिए', BG: 'Имам нужда от помощ', CS: 'Potřebuji pomoc', DA: 'Jeg har brug for hjælp', EL: 'Χρειάζομαι βοήθεια', ET: 'Ma vajan abi', FI: 'Tarvitsen apua', HU: 'Segítségre van szükségem', LT: 'Man reikia pagalbos', LV: 'Man vajag palīdzību', NB: 'Jeg trenger hjelp', RO: 'Am nevoie de ajutor', SK: 'Potrebujem pomoc', SL: 'Potrebujem pomoč', UK: 'Мені потрібна допомога' }
+    },
+    {
+      idText: 'Tolong panggil ambulans',
+      translations: { EN: 'Please call an ambulance', KO: '구급차를 불러주세요', JA: '救急車を呼んでください', ZH: '请叫救护车', FR: 'Appelez une ambulance, s\'il vous plaît', DE: 'Bitte rufen Sie einen Krankenwagen', ES: 'Por favor, llame a una ambulancia', IT: "Per favore, chiami un'ambulanza", RU: 'Пожалуйста, вызовите скорую помощь', AR: 'من فضلك اتصل بسيارة إسعاف', PT: 'Por favor, chame uma ambulância', TR: 'Lütfen ambulans çağırın', NL: 'Bel alstublieft een ambulance', PL: 'Proszę wezwać karetkę', SV: 'Ring en ambulans, tack', VI: 'Xin hãy gọi xe cứu thương', TH: 'กรุณาโทรเรียกรถพยาบาล', HI: 'कृपया एम्बुलेंस बुलाएं', BG: 'Моля, извикайте линейка', CS: 'Prosím, zavolejte sanitku', DA: 'Ring venligst efter en ambulance', EL: 'Παρακαλώ καλέστε ασθενοφόρο', ET: 'Palun kutsuge kiirabi', FI: 'Soittakaa ambulanssi, kiitos', HU: 'Kérem, hívjon mentőt', LT: 'Prašau, iškvieskite greitąją pagalbą', LV: 'Lūdzu, izsauciet ātro palīdzību', NB: 'Vennligst ring en ambulanse', RO: 'Vă rog chemați o ambulanță', SK: 'Prosím, zavolajte sanitku', SL: 'Prosim, pokličite rešilca', UK: 'Будь ласка, викличте швидку допомогу' }
+    },
+    {
+      idText: 'Saya butuh dokter',
+      translations: { EN: 'I need a doctor', KO: '의사가 필요해요', JA: '医者が必要です', ZH: '我需要看医生', FR: "J'ai besoin d'un médecin", DE: 'Ich brauche einen Arzt', ES: 'Necesito un médico', IT: 'Ho bisogno di un medico', RU: 'Мне нужен врач', AR: 'أحتاج إلى طبيب', PT: 'Preciso de um médico', TR: 'Bir doktora ihtiyacım var', NL: 'Ik heb een dokter nodig', PL: 'Potrzebuję lekarza', SV: 'Jag behöver en läkare', VI: 'Tôi cần bác sĩ', TH: 'ฉันต้องการหมอ', HI: 'मुझे डॉक्टर चाहिए', BG: 'Имам нужда от лекар', CS: 'Potřebuji lékaře', DA: 'Jeg har brug for en læge', EL: 'Χρειάζομαι γιατρό', ET: 'Ma vajan arsti', FI: 'Tarvitsen lääkärin', HU: 'Orvosra van szükségem', LT: 'Man reikia gydytojo', LV: 'Man vajag ārstu', NB: 'Jeg trenger en lege', RO: 'Am nevoie de un doctor', SK: 'Potrebujem lekára', SL: 'Potrebujem zdravnika', UK: 'Мені потрібен лікар' }
+    },
+    {
+      idText: 'Di mana rumah sakit terdekat?',
+      translations: { EN: 'Where is the nearest hospital?', KO: '가장 가까운 병원이 어디예요?', JA: '一番近い病院はどこですか?', ZH: '最近的医院在哪里?', FR: "Où est l'hôpital le plus proche ?", DE: 'Wo ist das nächste Krankenhaus?', ES: '¿Dónde está el hospital más cercano?', IT: "Dov'è l'ospedale più vicino?", RU: 'Где находится ближайшая больница?', AR: 'أين أقرب مستشفى؟', PT: 'Onde fica o hospital mais próximo?', TR: 'En yakın hastane nerede?', NL: 'Waar is het dichtstbijzijnde ziekenhuis?', PL: 'Gdzie jest najbliższy szpital?', SV: 'Var ligger närmaste sjukhus?', VI: 'Bệnh viện gần nhất ở đâu?', TH: 'โรงพยาบาลที่ใกล้ที่สุดอยู่ที่ไหน?', HI: 'सबसे नज़दीकी अस्पताल कहाँ है?', BG: 'Къде е най-близката болница?', CS: 'Kde je nejbližší nemocnice?', DA: 'Hvor er det nærmeste hospital?', EL: 'Πού είναι το πλησιέστερο νοσοκομείο;', ET: 'Kus on lähim haigla?', FI: 'Missä on lähin sairaala?', HU: 'Hol van a legközelebbi kórház?', LT: 'Kur yra artimiausia ligoninė?', LV: 'Kur ir tuvākā slimnīca?', NB: 'Hvor er nærmeste sykehus?', RO: 'Unde este cel mai apropiat spital?', SK: 'Kde je najbližšia nemocnica?', SL: 'Kje je najbližja bolnišnica?', UK: 'Де найближча лікарня?' }
+    },
+    {
+      idText: 'Saya tersesat',
+      translations: { EN: 'I am lost', KO: '길을 잃었어요', JA: '道に迷いました', ZH: '我迷路了', FR: 'Je suis perdu(e)', DE: 'Ich habe mich verirrt', ES: 'Estoy perdido/a', IT: 'Mi sono perso/a', RU: 'Я заблудился/заблудилась', AR: 'أنا تائه', PT: 'Estou perdido/a', TR: 'Kayboldum', NL: 'Ik ben verdwaald', PL: 'Zgubiłem/am się', SV: 'Jag har gått vilse', VI: 'Tôi bị lạc đường', TH: 'ฉันหลงทาง', HI: 'मैं रास्ता भटक गया/गई हूँ', BG: 'Изгубих се', CS: 'Ztratil/a jsem se', DA: 'Jeg er faret vild', EL: 'Έχω χαθεί', ET: 'Ma olen eksinud', FI: 'Olen eksynyt', HU: 'Eltévedtem', LT: 'Aš pasiklydau', LV: 'Es esmu apmaldījies/apmaldījusies', NB: 'Jeg har gått meg bort', RO: 'M-am rătăcit', SK: 'Stratil/a som sa', SL: 'Izgubil/a sem se', UK: 'Я заблукав/заблукала' }
+    },
+    {
+      idText: 'Paspor saya hilang',
+      translations: { EN: 'I lost my passport', KO: '여권을 잃어버렸어요', JA: 'パスポートをなくしました', ZH: '我的护照丢了', FR: 'J\'ai perdu mon passeport', DE: 'Ich habe meinen Reisepass verloren', ES: 'He perdido mi pasaporte', IT: 'Ho perso il mio passaporto', RU: 'Я потерял(а) паспорт', AR: 'لقد فقدت جواز سفري', PT: 'Perdi meu passaporte', TR: 'Pasaportumu kaybettim', NL: 'Ik ben mijn paspoort kwijt', PL: 'Zgubiłem/am paszport', SV: 'Jag har tappat bort mitt pass', VI: 'Tôi bị mất hộ chiếu', TH: 'หนังสือเดินทางของฉันหาย', HI: 'मेरा पासपोर्ट खो गया है', BG: 'Загубих паспорта си', CS: 'Ztratil/a jsem pas', DA: 'Jeg har mistet mit pas', EL: 'Έχασα το διαβατήριό μου', ET: 'Ma kaotasin oma passi', FI: 'Kadotin passini', HU: 'Elvesztettem az útlevelemet', LT: 'Praradau savo pasą', LV: 'Es pazaudēju savu pasi', NB: 'Jeg har mistet passet mitt', RO: 'Mi-am pierdut pașaportul', SK: 'Stratil/a som pas', SL: 'Izgubil/a sem potni list', UK: 'Я загубив/загубила паспорт' }
+    },
+    {
+      idText: 'Tolong hubungi polisi',
+      translations: { EN: 'Please call the police', KO: '경찰을 불러주세요', JA: '警察を呼んでください', ZH: '请报警', FR: "Appelez la police, s'il vous plaît", DE: 'Bitte rufen Sie die Polizei', ES: 'Por favor, llame a la policía', IT: 'Per favore, chiami la polizia', RU: 'Пожалуйста, вызовите полицию', AR: 'من فضلك اتصل بالشرطة', PT: 'Por favor, chame a polícia', TR: 'Lütfen polisi arayın', NL: 'Bel alstublieft de politie', PL: 'Proszę wezwać policję', SV: 'Ring polisen, tack', VI: 'Xin hãy gọi cảnh sát', TH: 'กรุณาโทรแจ้งตำรวจ', HI: 'कृपया पुलिस को बुलाएं', BG: 'Моля, обадете се на полицията', CS: 'Prosím, zavolejte policii', DA: 'Ring venligst til politiet', EL: 'Παρακαλώ καλέστε την αστυνομία', ET: 'Palun kutsuge politsei', FI: 'Soittakaa poliisi, kiitos', HU: 'Kérem, hívja a rendőrséget', LT: 'Prašau, iškvieskite policiją', LV: 'Lūdzu, izsauciet policiju', NB: 'Vennligst ring politiet', RO: 'Vă rog chemați poliția', SK: 'Prosím, zavolajte políciu', SL: 'Prosim, pokličite policijo', UK: 'Будь ласка, викличте поліцію' }
+    }
+  ];
+
+  function populateEmergencyLangSelect() {
+    updateEmergencyLangPillLabel();
+  }
+
+  function updateEmergencyLangPillLabel() {
+    const lang = getLangByCode(emergencyLangCode);
+    emergencyLangPillLabel.textContent = `${lang.flag} ${lang.name}`;
+  }
+
+  function renderEmergencyPhrases(langCode) {
+    emergencyPhraseList.innerHTML = '';
+
+    EMERGENCY_PHRASES.forEach(phrase => {
+      const translated = phrase.translations[langCode] || phrase.translations.EN;
+
+      const card = document.createElement('div');
+      card.className = 'emergency-phrase-card';
+      card.innerHTML = `
+        <div class="emergency-phrase-text">
+          <div class="emergency-phrase-id">${phrase.idText}</div>
+          <div class="emergency-phrase-translated">${translated}</div>
+        </div>
+        <button class="emergency-phrase-speak-btn" aria-label="Dengarkan">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </button>
+      `;
+
+      card.querySelector('.emergency-phrase-translated').addEventListener('click', () => {
+        showFullscreenText(translated);
+      });
+
+      card.querySelector('.emergency-phrase-speak-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        speakSentence(translated, langCode, false);
+      });
+
+      emergencyPhraseList.appendChild(card);
+    });
+  }
+
+  function openEmergencyPhrases() {
+    renderEmergencyPhrases(emergencyLangCode);
+    emergencyPhrasesOverlay.classList.add('active');
+  }
+
+  function closeEmergencyPhrases() {
+    emergencyPhrasesOverlay.classList.remove('active');
   }
 
   function queueTranslation(text) {
@@ -1299,6 +1462,9 @@ async function translateConvUtterance(speakingSide, transcript) {
     if (type === 'source') title = 'Pilih Bahasa Asal';
     else if (type === 'convA') title = 'Bahasa Kamu';
     else if (type === 'convB') title = 'Bahasa Lawan Bicara';
+    else if (type === 'unitFrom' || type === 'unitTo') title = 'Pilih Satuan';
+    else if (type === 'currencyFrom' || type === 'currencyTo') title = 'Pilih Mata Uang';
+    else if (type === 'emergencyLang') title = 'Pilih Bahasa';
     sheetTitle.textContent = title;
     
     langSearchInput.value = '';
@@ -1313,19 +1479,47 @@ async function translateConvUtterance(speakingSide, transcript) {
     currentSelectingLangType = null;
   }
 
+  // Ambil daftar item untuk ditampilkan di sheet, sesuai tipe picker yang sedang aktif.
+  // Semua item dinormalisasi ke bentuk {code, flag, name} supaya render loop-nya generik.
+  function getSheetItems(type) {
+    if (type === 'unitFrom' || type === 'unitTo') {
+      const cat = UNIT_CATEGORIES[currentUnitCategory];
+      return Object.keys(cat.units).map(key => ({ code: key, flag: '📏', name: cat.units[key].name }));
+    }
+    if (type === 'currencyFrom' || type === 'currencyTo') {
+      return CURRENCY_LIST;
+    }
+    if (type === 'emergencyLang') {
+      return languages.filter(l => EMERGENCY_LANGUAGES.indexOf(l.code) !== -1);
+    }
+    return languages;
+  }
+
+  function getSheetCurrentSelected(type) {
+    switch (type) {
+      case 'source': return sourceLang;
+      case 'imageTarget': return imageTranslateTargetLang;
+      case 'convA': return convLangA;
+      case 'convB': return convLangB;
+      case 'unitFrom': return unitFromKey;
+      case 'unitTo': return unitToKey;
+      case 'currencyFrom': return currencyFromCode;
+      case 'currencyTo': return currencyToCode;
+      case 'emergencyLang': return emergencyLangCode;
+      default: return targetLang;
+    }
+  }
+
   function renderLanguagesInSheet() {
     languageListContainer.innerHTML = '';
-    
-    const currentSelected = currentSelectingLangType === 'source' ? sourceLang
-      : currentSelectingLangType === 'imageTarget' ? imageTranslateTargetLang
-      : currentSelectingLangType === 'convA' ? convLangA
-      : currentSelectingLangType === 'convB' ? convLangB
-      : targetLang;
+
+    const items = getSheetItems(currentSelectingLangType);
+    const currentSelected = getSheetCurrentSelected(currentSelectingLangType);
     const query = langSearchQuery.toLowerCase().trim();
 
-    const filteredLangs = languages.filter(lang => {
-      const excludeAuto = ['target', 'imageTarget', 'convA', 'convB'].indexOf(currentSelectingLangType) !== -1;
-      if (excludeAuto && lang.code === 'AUTO') {
+    const excludeAutoTypes = ['target', 'imageTarget', 'convA', 'convB', 'emergencyLang'];
+    const filteredLangs = items.filter(lang => {
+      if (excludeAutoTypes.indexOf(currentSelectingLangType) !== -1 && lang.code === 'AUTO') {
         return false;
       }
       return lang.name.toLowerCase().includes(query);
@@ -1337,7 +1531,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       emptyDiv.style.padding = '32px 16px';
       emptyDiv.style.color = 'rgba(255,255,255,0.35)';
       emptyDiv.style.fontSize = '14px';
-      emptyDiv.textContent = 'Bahasa tidak ditemukan';
+      emptyDiv.textContent = 'Tidak ditemukan';
       languageListContainer.appendChild(emptyDiv);
       return;
     }
@@ -1391,6 +1585,41 @@ async function translateConvUtterance(speakingSide, transcript) {
       }
       updateConvLangPills();
       closeLanguageSheet();
+      return;
+    }
+
+    if (currentSelectingLangType === 'unitFrom' || currentSelectingLangType === 'unitTo') {
+      if (currentSelectingLangType === 'unitFrom') {
+        unitFromKey = code;
+      } else {
+        unitToKey = code;
+      }
+      const cat = UNIT_CATEGORIES[currentUnitCategory];
+      unitFromPillLabel.textContent = cat.units[unitFromKey].name;
+      unitToPillLabel.textContent = cat.units[unitToKey].name;
+      closeLanguageSheet();
+      recalculateUnitFromInput();
+      return;
+    }
+
+    if (currentSelectingLangType === 'currencyFrom' || currentSelectingLangType === 'currencyTo') {
+      if (currentSelectingLangType === 'currencyFrom') {
+        currencyFromCode = code;
+      } else {
+        currencyToCode = code;
+      }
+      updateCurrencyPillLabels();
+      closeLanguageSheet();
+      updateCurrencyRateInfoText();
+      recalculateCurrencyFromInput();
+      return;
+    }
+
+    if (currentSelectingLangType === 'emergencyLang') {
+      emergencyLangCode = code;
+      updateEmergencyLangPillLabel();
+      closeLanguageSheet();
+      renderEmergencyPhrases(emergencyLangCode);
       return;
     }
 
@@ -1644,6 +1873,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     updateLangPills();
     stopSpeechRecognition();
     populateCurrencySelects();
+    populateEmergencyLangSelect();
     updateOnlineStatus();
     window.addEventListener('online', function () {
       updateOnlineStatus();
@@ -1750,16 +1980,17 @@ async function translateConvUtterance(speakingSide, transcript) {
     btn.classList.add('active');
     switchUnitCategory(btn.dataset.category);
   });
-  unitInputFrom.addEventListener('input', function () {
-    const val = parseFloat(this.value);
-    if (isNaN(val)) { unitInputTo.value = ''; return; }
-    unitInputTo.value = roundNice(UNIT_CONVERTERS[currentUnitCategory].aToB(val));
-  });
+  unitInputFrom.addEventListener('input', recalculateUnitFromInput);
   unitInputTo.addEventListener('input', function () {
     const val = parseFloat(this.value);
     if (isNaN(val)) { unitInputFrom.value = ''; return; }
-    unitInputFrom.value = roundNice(UNIT_CONVERTERS[currentUnitCategory].bToA(val));
+    const result = convertUnit(val, unitToKey, unitFromKey);
+    if (result !== null) {
+      unitInputFrom.value = roundNice(result);
+    }
   });
+  unitFromPill.addEventListener('click', () => openLanguageSheet('unitFrom'));
+  unitToPill.addEventListener('click', () => openLanguageSheet('unitTo'));
   unitSwapBtn.addEventListener('click', handleUnitSwap);
 
   openTippingInfoBtn.addEventListener('click', () => {
@@ -1772,7 +2003,8 @@ async function translateConvUtterance(speakingSide, transcript) {
   });
 
   showToLocalBtn.addEventListener('click', handleShowToLocal);
-  showToLocalOverlay.addEventListener('click', closeShowToLocal); 
+  showToLocalOverlay.addEventListener('click', closeShowToLocal);
+
   openCurrencyCalcBtn.addEventListener('click', () => {
     closeTravelToolsHub();
     openCurrencyCalculator();
@@ -1783,19 +2015,20 @@ async function translateConvUtterance(speakingSide, transcript) {
   currencyInputTo.addEventListener('input', function () {
     const val = parseFloat(this.value);
     if (isNaN(val)) { currencyInputFrom.value = ''; return; }
-    const result = convertCurrency(val, currencySelectTo.value, currencySelectFrom.value);
+    const result = convertCurrency(val, currencyToCode, currencyFromCode);
     if (result !== null) {
       currencyInputFrom.value = roundNice(result);
     }
   });
-  currencySelectFrom.addEventListener('change', function () {
-    updateCurrencyRateInfoText();
-    recalculateCurrencyFromInput();
+  currencyFromPill.addEventListener('click', () => openLanguageSheet('currencyFrom'));
+  currencyToPill.addEventListener('click', () => openLanguageSheet('currencyTo'));
+
+  openEmergencyPhrasesBtn.addEventListener('click', () => {
+    closeTravelToolsHub();
+    openEmergencyPhrases();
   });
-  currencySelectTo.addEventListener('change', function () {
-    updateCurrencyRateInfoText();
-    recalculateCurrencyFromInput();
-  });
+  backFromEmergencyPhrasesBtn.addEventListener('click', closeEmergencyPhrases);
+  emergencyLangPill.addEventListener('click', () => openLanguageSheet('emergencyLang'));
 
     // History overlay navigation
     historyBtn.addEventListener('click', () => {
