@@ -197,6 +197,31 @@ const LANGUAGE_NAMES = {
   TH: 'Thai', VI: 'Vietnamese', HI: 'Hindi'
 };
 
+async function fetchGeminiWithRetry(url, options, maxRetries = 2) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      if (response.status === 503 && attempt < maxRetries) {
+        const waitMs = (attempt + 1) * 1000;
+        console.log(`⏳ Gemini 503 (server sibuk), retry ke-${attempt + 1} setelah ${waitMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+        continue;
+      }
+      return response;
+    } catch (networkErr) {
+      lastError = networkErr;
+      if (attempt < maxRetries) {
+        const waitMs = (attempt + 1) * 1000;
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+        continue;
+      }
+    }
+  }
+  throw lastError || new Error("Gagal menghubungi Gemini API setelah beberapa percobaan.");
+}
+
 async function translateWithGemini(text, sourceLangCode, targetLangCode) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -214,7 +239,7 @@ async function translateWithGemini(text, sourceLangCode, targetLangCode) {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-  const response = await fetch(url, {
+  const response = await fetchGeminiWithRetry(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -233,6 +258,9 @@ async function translateWithGemini(text, sourceLangCode, targetLangCode) {
   });
 
   if (!response.ok) {
+    if (response.status === 503) {
+      throw new Error("Server Gemini sedang sibuk (banyak yang pakai bersamaan). Coba lagi dalam beberapa saat.");
+    }
     const errBody = await response.text().catch(() => '');
     throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
   }
@@ -291,7 +319,7 @@ async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
-  const response = await fetch(url, {
+  const response = await fetchGeminiWithRetry(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -312,6 +340,9 @@ async function translateImageWithGemini(imageBase64, mimeType, targetLangCode) {
   });
 
   if (!response.ok) {
+    if (response.status === 503) {
+      throw new Error("Server Gemini sedang sibuk (banyak yang pakai bersamaan). Coba lagi dalam beberapa saat.");
+    }
     const errBody = await response.text().catch(() => '');
     throw new Error(`Gemini API error (${response.status}): ${errBody.slice(0, 200)}`);
   }
