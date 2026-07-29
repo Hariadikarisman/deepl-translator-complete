@@ -44,6 +44,247 @@
     { code: 'UK', name: 'Ukrainian', flag: '🇺🇦', ttsCode: 'uk-UA', speechCode: 'uk-UA' }
   ];
 
+  // ==========================================================
+  // SISTEM I18N (BAHASA APLIKASI) — beda dari bahasa translate di atas.
+  // Ini bahasa untuk teks UI app itu sendiri (tombol, judul, dll).
+  // Fase 1: ID (basis), EN, ZH. Bahasa lain menyusul.
+  // Catatan: toast (notifikasi kecil) untuk sementara masih Bahasa Indonesia —
+  // akan di-i18n-kan di fase berikutnya.
+  // ==========================================================
+  const I18N_STRINGS = {
+    id: {
+      appTitle: 'Haka Translator',
+      historyBtnLabel: 'Riwayat Terjemahan',
+      travelToolsBtnLabel: 'Travel Tools',
+      conversationModeBtnLabel: 'Mode Percakapan',
+      sourcePlaceholder: 'Masukan Kata / Kalimat',
+      clearTextBtnLabel: 'Hapus teks',
+      speakSourceBtnLabel: 'Dengarkan asal',
+      copySourceBtnLabel: 'Salin asal',
+      cameraTranslateBtnLabel: 'Translate dari foto',
+      voiceInputBtnLabel: 'Masukan suara',
+      swapBtnLabel: 'Tukar bahasa',
+      resultPlaceholder: 'Hasil Terjemahan',
+      translating: 'Menerjemahkan...',
+      speakTargetBtnLabel: 'Dengarkan hasil',
+      copyTargetBtnLabel: 'Salin hasil',
+      favoriteBtnLabel: 'Favorit',
+      showToLocalBtnLabel: 'Tunjukkan ke Lokal',
+      historyOverlayTitle: 'History & Favourite',
+      clearHistoryBtnTitle: 'Hapus semua riwayat',
+      tabHistory: 'History',
+      tabFavourite: 'Favourite',
+      historySearchPlaceholder: 'Cari kata kunci...',
+      backBtnText: 'Kembali',
+      sheetTitleDefault: 'Pilih Bahasa',
+      langSearchPlaceholder: 'Cari bahasa...',
+      imageResultTitle: 'Translate Foto',
+      imageLoadingText: 'Membaca & menerjemahkan teks...',
+      imageDetecting: 'Mendeteksi...',
+      convPlaceholder: 'Ketuk mic untuk bicara',
+      convYouLabel: 'Kamu: ',
+      convMicYouLabel: 'Bicara (kamu)',
+      convMicOtherLabel: 'Bicara (lawan bicara)',
+      exitBtnText: 'Keluar',
+      travelToolsTitle: 'Travel Tools',
+      unitConverterTitle: 'Konverter Satuan',
+      unitConverterSubtitle: 'Jarak, suhu, berat',
+      tippingInfoTitle: 'Info Tipping',
+      tippingInfoSubtitle: 'Kebiasaan tip per negara',
+      currencyCalcTitle: 'Kalkulator Mata Uang',
+      currencyCalcSubtitle: 'Kurs real-time',
+      emergencyPhrasesTitle: 'Frasa Darurat',
+      emergencyPhrasesSubtitle: 'Offline, 30+ bahasa',
+      appLanguageTitle: 'Bahasa Aplikasi',
+      appLanguageSubtitle: 'Ubah bahasa tampilan',
+      distanceTab: 'Jarak',
+      temperatureTab: 'Suhu',
+      weightTab: 'Berat',
+      tippingSearchPlaceholder: 'Cari negara...',
+      loadingRates: 'Memuat kurs...',
+      emergencyDisclaimer: 'Terjemahan otomatis — untuk situasi darurat yang serius, tetap usahakan bantuan dari penerjemah manusia atau layanan resmi.',
+      showToLocalHint: 'Ketuk di mana saja untuk kembali',
+      offlineBannerText: 'Offline — translate baru tidak tersedia, riwayat tetap bisa dibuka'
+    },
+    en: {
+      appTitle: 'Haka Translator',
+      historyBtnLabel: 'Translation History',
+      travelToolsBtnLabel: 'Travel Tools',
+      conversationModeBtnLabel: 'Conversation Mode',
+      sourcePlaceholder: 'Enter Word / Sentence',
+      clearTextBtnLabel: 'Clear text',
+      speakSourceBtnLabel: 'Listen to source',
+      copySourceBtnLabel: 'Copy source',
+      cameraTranslateBtnLabel: 'Translate from photo',
+      voiceInputBtnLabel: 'Voice input',
+      swapBtnLabel: 'Swap languages',
+      resultPlaceholder: 'Translation Result',
+      translating: 'Translating...',
+      speakTargetBtnLabel: 'Listen to result',
+      copyTargetBtnLabel: 'Copy result',
+      favoriteBtnLabel: 'Favorite',
+      showToLocalBtnLabel: 'Show to Local',
+      historyOverlayTitle: 'History & Favourite',
+      clearHistoryBtnTitle: 'Clear all history',
+      tabHistory: 'History',
+      tabFavourite: 'Favourite',
+      historySearchPlaceholder: 'Search keyword...',
+      backBtnText: 'Back',
+      sheetTitleDefault: 'Select Language',
+      langSearchPlaceholder: 'Search language...',
+      imageResultTitle: 'Translate Photo',
+      imageLoadingText: 'Reading & translating text...',
+      imageDetecting: 'Detecting...',
+      convPlaceholder: 'Tap mic to speak',
+      convYouLabel: 'You: ',
+      convMicYouLabel: 'Speak (you)',
+      convMicOtherLabel: 'Speak (other person)',
+      exitBtnText: 'Exit',
+      travelToolsTitle: 'Travel Tools',
+      unitConverterTitle: 'Unit Converter',
+      unitConverterSubtitle: 'Distance, temperature, weight',
+      tippingInfoTitle: 'Tipping Info',
+      tippingInfoSubtitle: 'Tipping customs by country',
+      currencyCalcTitle: 'Currency Calculator',
+      currencyCalcSubtitle: 'Real-time rates',
+      emergencyPhrasesTitle: 'Emergency Phrases',
+      emergencyPhrasesSubtitle: 'Offline, 30+ languages',
+      appLanguageTitle: 'App Language',
+      appLanguageSubtitle: 'Change display language',
+      distanceTab: 'Distance',
+      temperatureTab: 'Temperature',
+      weightTab: 'Weight',
+      tippingSearchPlaceholder: 'Search country...',
+      loadingRates: 'Loading rates...',
+      emergencyDisclaimer: 'Automatic translation — for serious emergencies, still seek help from a human interpreter or official service.',
+      showToLocalHint: 'Tap anywhere to return',
+      offlineBannerText: 'Offline — new translations unavailable, history still accessible'
+    },
+    zh: {
+      appTitle: 'Haka 翻译',
+      historyBtnLabel: '翻译历史',
+      travelToolsBtnLabel: '旅行工具',
+      conversationModeBtnLabel: '对话模式',
+      sourcePlaceholder: '输入单词或句子',
+      clearTextBtnLabel: '清除文字',
+      speakSourceBtnLabel: '朗读原文',
+      copySourceBtnLabel: '复制原文',
+      cameraTranslateBtnLabel: '拍照翻译',
+      voiceInputBtnLabel: '语音输入',
+      swapBtnLabel: '交换语言',
+      resultPlaceholder: '翻译结果',
+      translating: '翻译中...',
+      speakTargetBtnLabel: '朗读译文',
+      copyTargetBtnLabel: '复制译文',
+      favoriteBtnLabel: '收藏',
+      showToLocalBtnLabel: '展示给当地人',
+      historyOverlayTitle: '历史与收藏',
+      clearHistoryBtnTitle: '清除所有历史',
+      tabHistory: '历史',
+      tabFavourite: '收藏',
+      historySearchPlaceholder: '搜索关键词...',
+      backBtnText: '返回',
+      sheetTitleDefault: '选择语言',
+      langSearchPlaceholder: '搜索语言...',
+      imageResultTitle: '照片翻译',
+      imageLoadingText: '正在读取并翻译文字...',
+      imageDetecting: '检测中...',
+      convPlaceholder: '点击麦克风说话',
+      convYouLabel: '你: ',
+      convMicYouLabel: '说话（你）',
+      convMicOtherLabel: '说话（对方）',
+      exitBtnText: '退出',
+      travelToolsTitle: '旅行工具',
+      unitConverterTitle: '单位换算器',
+      unitConverterSubtitle: '距离、温度、重量',
+      tippingInfoTitle: '小费信息',
+      tippingInfoSubtitle: '各国小费习惯',
+      currencyCalcTitle: '货币计算器',
+      currencyCalcSubtitle: '实时汇率',
+      emergencyPhrasesTitle: '紧急用语',
+      emergencyPhrasesSubtitle: '离线，30+种语言',
+      appLanguageTitle: '应用语言',
+      appLanguageSubtitle: '更改显示语言',
+      distanceTab: '距离',
+      temperatureTab: '温度',
+      weightTab: '重量',
+      tippingSearchPlaceholder: '搜索国家...',
+      loadingRates: '加载汇率中...',
+      emergencyDisclaimer: '自动翻译 — 遇到严重紧急情况时，仍应寻求人工翻译或官方服务的帮助。',
+      showToLocalHint: '点击任意位置返回',
+      offlineBannerText: '离线中 — 无法进行新的翻译，仍可查看历史记录'
+    }
+  };
+
+  // Bahasa aplikasi yang tersedia untuk dipilih user (beda dari daftar bahasa translate)
+  const APP_LANGUAGES = [
+    { code: 'id', name: 'Bahasa Indonesia', flag: '🇮🇩' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' }
+  ];
+
+  let currentAppLang = 'id'; // di-set ulang oleh detectAppLanguage() saat init
+
+  // Ambil string UI sesuai bahasa aplikasi aktif. Fallback ke EN kalau key tidak ada
+  // di bahasa aktif, fallback ke ID kalau tidak ada juga di EN (harusnya tidak pernah terjadi).
+  function t(key) {
+    const dict = I18N_STRINGS[currentAppLang] || I18N_STRINGS.en;
+    return dict[key] || I18N_STRINGS.en[key] || I18N_STRINGS.id[key] || key;
+  }
+
+  // Deteksi bahasa sistem device, cocokkan ke bahasa yang didukung app.
+  // Kalau tidak didukung / tidak terdeteksi, fallback ke Inggris (bukan Indonesia) —
+  // supaya user dari negara manapun dapat pengalaman netral, bukan diasumsikan Indonesia.
+  function detectSystemAppLanguage() {
+    try {
+      const sysLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+      if (sysLang.startsWith('id')) return 'id';
+      if (sysLang.startsWith('zh')) return 'zh';
+      if (sysLang.startsWith('en')) return 'en';
+      return 'en'; // fallback netral untuk bahasa yang belum didukung UI-nya
+    } catch (e) {
+      return 'en';
+    }
+  }
+
+  // Terapkan bahasa aplikasi: update semua elemen ber-atribut data-i18n / data-i18n-placeholder.
+  function applyAppLanguage(code) {
+    currentAppLang = code;
+    localStorage.setItem('haka_app_lang', code);
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+    });
+
+    // Sinkronkan teks placeholder/status yang di-generate JS (bukan murni statis HTML)
+    refreshDynamicI18nText();
+  }
+
+  // Beberapa teks di-generate/di-cek secara dinamis oleh JS (bukan cuma HTML statis),
+  // jadi perlu di-refresh manual tiap ganti bahasa. Cek berdasarkan STATE, bukan
+  // membandingkan isi teks lama (supaya tidak rusak saat teksnya sudah diterjemahkan).
+  function refreshDynamicI18nText() {
+    if (targetTextEl.classList.contains('translation-placeholder')) {
+      targetTextEl.textContent = t('resultPlaceholder');
+      adjustFontSize(targetTextEl, targetTextEl.textContent);
+    }
+    if (imageSourceLangName && imageSourceLangName.textContent && !lastCapturedPhoto) {
+      imageSourceLangName.textContent = t('imageDetecting');
+    }
+  }
+
+  function initAppLanguage() {
+    const saved = localStorage.getItem('haka_app_lang');
+    const initial = (saved && I18N_STRINGS[saved]) ? saved : detectSystemAppLanguage();
+    applyAppLanguage(initial);
+  }
+
   // ---- APP STATE ----
   let sourceLang = 'AUTO'; // Auto Detect by default
   let targetLang = 'EN'; // English by default as shown in the screenshot
@@ -145,6 +386,7 @@
 
   // Frasa Darurat
   const openEmergencyPhrasesBtn = document.getElementById('openEmergencyPhrasesBtn');
+  const openAppLanguageBtn = document.getElementById('openAppLanguageBtn');
   const emergencyPhrasesOverlay = document.getElementById('emergencyPhrasesOverlay');
   const backFromEmergencyPhrasesBtn = document.getElementById('backFromEmergencyPhrasesBtn');
   const emergencyLangPill = document.getElementById('emergencyLangPill');
@@ -335,17 +577,17 @@ function findCachedTranslation(text, srcLangCode, tgtLangCode) {
   // ---- DEBOUNCED AUTO TRANSLATOR ENGINE ----
   async function performTranslation(textToTranslate, shouldSaveHistory = false) {
     if (!textToTranslate || !textToTranslate.trim()) {
-      targetTextEl.textContent = 'Hasil Terjemahan';
+      targetTextEl.textContent = t('resultPlaceholder');
       targetTextEl.classList.add('translation-placeholder');
-      adjustFontSize(targetTextEl, 'Hasil Terjemahan');
+      adjustFontSize(targetTextEl, t('resultPlaceholder'));
       updateRomanizationDisplay('');
       updateFavoriteBtnState();
       return;
     }
 
     targetTextEl.classList.remove('translation-placeholder');
-    targetTextEl.textContent = 'Menerjemahkan...';
-    adjustFontSize(targetTextEl, 'Menerjemahkan...');
+    targetTextEl.textContent = t('translating');
+    adjustFontSize(targetTextEl, t('translating'));
     updateRomanizationDisplay(''); // sembunyikan romanisasi lama selama proses translate
     isTranslating = true;
 
@@ -752,8 +994,8 @@ async function translateConvUtterance(speakingSide, transcript) {
   const ownDisplay = speakingSide === 'A' ? convDisplayA : convDisplayB;
   const otherDisplay = speakingSide === 'A' ? convDisplayB : convDisplayA;
 
-  ownDisplay.innerHTML = '<span class="conv-original">Kamu: ' + transcript + '</span>';
-  otherDisplay.innerHTML = '<span class="conv-placeholder">Menerjemahkan...</span>';
+  ownDisplay.innerHTML = '<span class="conv-original">' + t('convYouLabel') + transcript + '</span>';
+  otherDisplay.innerHTML = '<span class="conv-placeholder">' + t('translating') + '</span>';
 
   try {
     const response = await fetch(getApiUrl('/api/translate'), {
@@ -990,7 +1232,7 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   function handleShowToLocal() {
     const text = targetTextEl.textContent.trim();
-    if (!text || text === 'Hasil Terjemahan' || text === 'Menerjemahkan...') {
+    if (!text || targetTextEl.classList.contains('translation-placeholder') || isTranslating) {
       showToast('Tidak ada teks untuk ditampilkan');
       return;
     }
@@ -1228,9 +1470,9 @@ async function translateConvUtterance(speakingSide, transcript) {
     }
 
     if (!text || !text.trim()) {
-      targetTextEl.textContent = 'Hasil Terjemahan';
+      targetTextEl.textContent = t('resultPlaceholder');
       targetTextEl.classList.add('translation-placeholder');
-      adjustFontSize(targetTextEl, 'Hasil Terjemahan');
+      adjustFontSize(targetTextEl, t('resultPlaceholder'));
       updateRomanizationDisplay('');
       updateFavoriteBtnState();
       return;
@@ -1371,7 +1613,7 @@ async function translateConvUtterance(speakingSide, transcript) {
   // ---- SPEECH SYNTHESIS (TTS) ----
   let activeSynthesisUtterance = null;
   function speakSentence(text, langCode, isSourceCard) {
-    if (!text || !text.trim() || text === 'Hasil Terjemahan' || text === 'Menerjemahkan...') {
+    if (!text || !text.trim() || text === t('resultPlaceholder') || text === t('translating')) {
       showToast('Tidak ada teks untuk diputar');
       return;
     }
@@ -1441,7 +1683,7 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   // ---- CLIPBOARD COPY UTILS ----
   async function copyTextToClipboard(text) {
-    if (!text || !text.trim() || text === 'Hasil Terjemahan') {
+    if (!text || !text.trim() || text === t('resultPlaceholder')) {
       showToast('Tidak ada teks untuk disalin');
       return;
     }
@@ -1458,13 +1700,14 @@ async function translateConvUtterance(speakingSide, transcript) {
   // ---- LANGUAGE SELECTION BOTTOM SHEET DRAWER ----
   function openLanguageSheet(type) {
     currentSelectingLangType = type;
-    let title = 'Pilih Bahasa Tujuan';
-    if (type === 'source') title = 'Pilih Bahasa Asal';
+    let title = t('sheetTitleDefault');
+    if (type === 'source') title = t('sheetTitleDefault');
     else if (type === 'convA') title = 'Bahasa Kamu';
     else if (type === 'convB') title = 'Bahasa Lawan Bicara';
     else if (type === 'unitFrom' || type === 'unitTo') title = 'Pilih Satuan';
     else if (type === 'currencyFrom' || type === 'currencyTo') title = 'Pilih Mata Uang';
-    else if (type === 'emergencyLang') title = 'Pilih Bahasa';
+    else if (type === 'emergencyLang') title = t('sheetTitleDefault');
+    else if (type === 'appLang') title = t('appLanguageTitle');
     sheetTitle.textContent = title;
     
     langSearchInput.value = '';
@@ -1492,6 +1735,9 @@ async function translateConvUtterance(speakingSide, transcript) {
     if (type === 'emergencyLang') {
       return languages.filter(l => EMERGENCY_LANGUAGES.indexOf(l.code) !== -1);
     }
+    if (type === 'appLang') {
+      return APP_LANGUAGES;
+    }
     return languages;
   }
 
@@ -1506,6 +1752,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       case 'currencyFrom': return currencyFromCode;
       case 'currencyTo': return currencyToCode;
       case 'emergencyLang': return emergencyLangCode;
+      case 'appLang': return currentAppLang;
       default: return targetLang;
     }
   }
@@ -1560,6 +1807,12 @@ async function translateConvUtterance(speakingSide, transcript) {
   }
 
   function selectLanguage(code) {
+    if (currentSelectingLangType === 'appLang') {
+      applyAppLanguage(code);
+      closeLanguageSheet();
+      return;
+    }
+
     if (currentSelectingLangType === 'source') {
       sourceLang = code;
       updateLangPills();
@@ -1783,7 +2036,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     const srcText = sourceTextEl.value.trim();
     const tgtText = targetTextEl.textContent.trim();
 
-    if (!srcText || !tgtText || tgtText === 'Hasil Terjemahan' || tgtText === 'Menerjemahkan...') {
+    if (!srcText || !tgtText || targetTextEl.classList.contains('translation-placeholder') || isTranslating) {
       showToast('Tidak ada teks untuk difavoritkan');
       return;
     }
@@ -1830,8 +2083,9 @@ async function translateConvUtterance(speakingSide, transcript) {
     sourceLang = targetLang;
     targetLang = tempLang;
 
-    sourceTextEl.value = targetTextEl.textContent === 'Hasil Terjemahan' || targetTextEl.textContent === 'Menerjemahkan...' ? '' : targetTextEl.textContent;
-    targetTextEl.textContent = tempText || 'Hasil Terjemahan';
+    const isTargetEmpty = targetTextEl.classList.contains('translation-placeholder') || isTranslating;
+    sourceTextEl.value = isTargetEmpty ? '' : targetTextEl.textContent;
+    targetTextEl.textContent = tempText || t('resultPlaceholder');
 
     if (!sourceTextEl.value) {
       targetTextEl.classList.add('translation-placeholder');
@@ -1855,11 +2109,11 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   function clearAllWorkspace() {
     sourceTextEl.value = '';
-    targetTextEl.textContent = 'Hasil Terjemahan';
+    targetTextEl.textContent = t('resultPlaceholder');
     targetTextEl.classList.add('translation-placeholder');
     
     adjustFontSize(sourceTextEl, '');
-    adjustFontSize(targetTextEl, 'Hasil Terjemahan');
+    adjustFontSize(targetTextEl, t('resultPlaceholder'));
     updateRomanizationDisplay('');
     updateClearButtonVisibility();
     
@@ -1869,6 +2123,7 @@ async function translateConvUtterance(speakingSide, transcript) {
   }
 
   function init() {
+    initAppLanguage();
     loadHistoryFromStorage();
     updateLangPills();
     stopSpeechRecognition();
@@ -2029,6 +2284,11 @@ async function translateConvUtterance(speakingSide, transcript) {
   });
   backFromEmergencyPhrasesBtn.addEventListener('click', closeEmergencyPhrases);
   emergencyLangPill.addEventListener('click', () => openLanguageSheet('emergencyLang'));
+
+  openAppLanguageBtn.addEventListener('click', () => {
+    closeTravelToolsHub();
+    openLanguageSheet('appLang');
+  });
 
     // History overlay navigation
     historyBtn.addEventListener('click', () => {

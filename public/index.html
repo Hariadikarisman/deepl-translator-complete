@@ -24,7 +24,7 @@
         <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
         <line x1="12" y1="20" x2="12.01" y2="20"/>
       </svg>
-      <span>Offline — translate baru tidak tersedia, riwayat tetap bisa dibuka</span>
+      <span data-i18n="offlineBannerText">Offline — translate baru tidak tersedia, riwayat tetap bisa dibuka</span>
     </div>
 
     <!-- SPLIT WORKSPACE -->
@@ -37,14 +37,14 @@
         <header class="header-bar">
           <!-- Grup kiri: History + Travel Tools -->
           <div class="header-btn-group">
-            <button class="header-btn" id="historyBtn" aria-label="Riwayat Terjemahan">
+            <button class="header-btn" id="historyBtn" aria-label="Riwayat Terjemahan" data-i18n-aria="historyBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                 <path d="M3 3v5h5"/>
                 <path d="M12 7v5l4 2"/>
               </svg>
             </button>
-            <button class="header-btn" id="travelToolsBtn" aria-label="Travel Tools">
+            <button class="header-btn" id="travelToolsBtn" aria-label="Travel Tools" data-i18n-aria="travelToolsBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
@@ -52,10 +52,10 @@
             </button>
           </div>
           
-          <h1 class="header-title">Haka translator</h1>
+          <h1 class="header-title" data-i18n="appTitle">Haka translator</h1>
           
           <!-- Tombol Conversation Mode (kanan) -->
-          <button class="header-btn" id="conversationModeBtn" aria-label="Mode Percakapan">
+          <button class="header-btn" id="conversationModeBtn" aria-label="Mode Percakapan" data-i18n-aria="conversationModeBtnLabel">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
             </svg>
@@ -64,27 +64,27 @@
 
         <!-- Dynamic Content Textarea for text entry -->
         <div class="content-area" style="position:relative;">
-            <textarea class="textarea-source size-large" id="sourceText" placeholder="Masukan Kata / Kalimat" maxlength="500" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
-            <button id="clearTextBtn" class="clear-text-btn" aria-label="Hapus teks">✕</button>
+            <textarea class="textarea-source size-large" id="sourceText" placeholder="Masukan Kata / Kalimat" data-i18n-placeholder="sourcePlaceholder" maxlength="500" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+            <button id="clearTextBtn" class="clear-text-btn" aria-label="Hapus teks" data-i18n-aria="clearTextBtnLabel">✕</button>
         </div>
 
         <!-- Bottom Action Bar inside source card -->
         <footer class="control-bar">
           <div class="control-group-left">
-            <button class="control-btn" id="speakSourceBtn" aria-label="Dengarkan asal">
+            <button class="control-btn" id="speakSourceBtn" aria-label="Dengarkan asal" data-i18n-aria="speakSourceBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
               </svg>
             </button>
-            <button class="control-btn" id="copySourceBtn" aria-label="Salin asal">
+            <button class="control-btn" id="copySourceBtn" aria-label="Salin asal" data-i18n-aria="copySourceBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
               </svg>
             </button>
-            <button class="control-btn" id="cameraTranslateBtn" aria-label="Translate dari foto">
+            <button class="control-btn" id="cameraTranslateBtn" aria-label="Translate dari foto" data-i18n-aria="cameraTranslateBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                 <circle cx="12" cy="13" r="3.5"/>
@@ -101,7 +101,7 @@
             </div>
 
             <!-- Speech to Text microphone circular button -->
-            <button class="mic-action-btn" id="voiceInputBtn" aria-label="Masukan suara">
+            <button class="mic-action-btn" id="voiceInputBtn" aria-label="Masukan suara" data-i18n-aria="voiceInputBtnLabel">
               <!-- Mic SVG -->
               <svg class="mic-icon-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
@@ -124,7 +124,7 @@
 
       <!-- FLOATING SWAP BUTTON (Dividing the screen halves perfectly) -->
       <div class="center-swap-container">
-        <button class="swap-btn-circle" id="swapBtn" aria-label="Tukar bahasa">
+        <button class="swap-btn-circle" id="swapBtn" aria-label="Tukar bahasa" data-i18n-aria="swapBtnLabel" data-i18n-aria="swapBtnLabel">
           <!-- Double up down chevron swap icon -->
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m3 16 4 4 4-4"/>
@@ -151,25 +151,25 @@
         <!-- Bottom Action Bar inside target card -->
         <footer class="control-bar">
           <div class="control-group-left">
-            <button class="control-btn" id="speakTargetBtn" aria-label="Dengarkan hasil">
+            <button class="control-btn" id="speakTargetBtn" aria-label="Dengarkan hasil" data-i18n-aria="speakTargetBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                 <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
               </svg>
             </button>
-            <button class="control-btn" id="copyTargetBtn" aria-label="Salin hasil">
+            <button class="control-btn" id="copyTargetBtn" aria-label="Salin hasil" data-i18n-aria="copyTargetBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
               </svg>
             </button>
-            <button class="control-btn" id="favoriteBtn" aria-label="Favorit">
+            <button class="control-btn" id="favoriteBtn" aria-label="Favorit" data-i18n-aria="favoriteBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
             </button>
-            <button class="control-btn" id="showToLocalBtn" aria-label="Tunjukkan ke Lokal">
+            <button class="control-btn" id="showToLocalBtn" aria-label="Tunjukkan ke Lokal" data-i18n-aria="showToLocalBtnLabel">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 3h6v6"/>
                 <path d="M9 21H3v-6"/>
@@ -202,12 +202,12 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
         
-        <h2 class="overlay-title">History & Favourite</h2>
+        <h2 class="overlay-title" data-i18n="historyOverlayTitle">History &amp; Favourite</h2>
         
-        <button class="overlay-action-btn" id="clearHistoryBtn" title="Hapus semua riwayat">
+        <button class="overlay-action-btn" id="clearHistoryBtn" title="Hapus semua riwayat" data-i18n-aria="clearHistoryBtnTitle">
           <!-- Trash can icon -->
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 6h18"/>
@@ -220,8 +220,8 @@
       <!-- Segmented Tab Category Filter -->
       <div class="segmented-control-container">
         <div class="segmented-control">
-          <button class="segment-btn active" id="tabHistory">History</button>
-          <button class="segment-btn" id="tabFavourite">Favourite</button>
+          <button class="segment-btn active" id="tabHistory" data-i18n="tabHistory">History</button>
+          <button class="segment-btn" id="tabFavourite" data-i18n="tabFavourite">Favourite</button>
         </div>
       </div>
 
@@ -232,7 +232,7 @@
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.3-4.3"/>
           </svg>
-          <input type="text" class="search-input" id="historySearchInput" placeholder="Cari kata kunci..." autocomplete="off" />
+          <input type="text" class="search-input" id="historySearchInput" placeholder="Cari kata kunci..." data-i18n-placeholder="historySearchPlaceholder" autocomplete="off" />
           <button type="button" class="search-clear-btn" id="searchClearBtn">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/>
@@ -272,7 +272,7 @@
               <circle cx="11" cy="11" r="8"/>
               <path d="m21 21-4.3-4.3"/>
             </svg>
-            <input type="text" class="search-input" id="langSearchInput" placeholder="Cari bahasa..." autocomplete="off" />
+            <input type="text" class="search-input" id="langSearchInput" placeholder="Cari bahasa..." data-i18n-placeholder="langSearchPlaceholder" autocomplete="off" />
           </div>
         </div>
 
@@ -290,9 +290,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
-        <h2 class="overlay-title">Translate Foto</h2>
+        <h2 class="overlay-title" data-i18n="imageResultTitle">Translate Foto</h2>
         <div style="width: 60px;"></div>
       </header>
 
@@ -300,14 +300,14 @@
         <img id="imageResultPhoto" src="" alt="Foto yang diterjemahkan" />
         <div class="image-result-loading" id="imageResultLoading">
           <div class="image-result-spinner"></div>
-          <span>Membaca &amp; menerjemahkan teks...</span>
+          <span data-i18n="imageLoadingText">Membaca &amp; menerjemahkan teks...</span>
         </div>
         <!-- Kotak label terjemahan disisipkan di sini secara dinamis oleh JS -->
       </div>
 
       <footer class="control-bar image-result-lang-bar">
         <div class="lang-selector-pill lang-pill-readonly" id="imageSourceLangDisplay">
-          <span id="imageSourceLangName">Mendeteksi...</span>
+          <span id="imageSourceLangName" data-i18n="imageDetecting">Mendeteksi...</span>
         </div>
         <span class="image-result-arrow">→</span>
         <div class="lang-selector-pill" id="imageTargetLangPill">
@@ -328,9 +328,9 @@
             <span class="chevron">▼</span>
           </button>
           <div class="conversation-text-display" id="convDisplayB">
-            <span class="conv-placeholder">Ketuk mic untuk bicara</span>
+            <span class="conv-placeholder" data-i18n="convPlaceholder">Ketuk mic untuk bicara</span>
           </div>
-          <button class="conv-mic-btn" id="convMicB" aria-label="Bicara (lawan bicara)">
+          <button class="conv-mic-btn" id="convMicB" aria-label="Bicara (lawan bicara)" data-i18n-aria="convMicOtherLabel">
             <svg class="mic-icon-svg" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
               <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
@@ -349,7 +349,7 @@
 
       <!-- Kontrol tengah: tukar bahasa (tetap di tengah) -->
       <div class="conversation-center-controls">
-        <button class="conv-control-btn" id="convSwapBtn" aria-label="Tukar bahasa">
+        <button class="conv-control-btn" id="convSwapBtn" aria-label="Tukar bahasa" data-i18n-aria="swapBtnLabel">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m3 16 4 4 4-4"/>
             <path d="M7 20V4"/>
@@ -361,7 +361,7 @@
 
       <!-- Tombol Exit — mepet kanan -->
       <button class="conv-exit-btn" id="backFromConversationBtn" aria-label="Keluar">
-        <span>Exit</span>
+        <span data-i18n="exitBtnText">Exit</span>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/>
@@ -377,9 +377,9 @@
             <span class="chevron">▼</span>
           </button>
           <div class="conversation-text-display" id="convDisplayA">
-            <span class="conv-placeholder">Ketuk mic untuk bicara</span>
+            <span class="conv-placeholder" data-i18n="convPlaceholder">Ketuk mic untuk bicara</span>
           </div>
-          <button class="conv-mic-btn" id="convMicA" aria-label="Bicara (kamu)">
+          <button class="conv-mic-btn" id="convMicA" aria-label="Bicara (kamu)" data-i18n-aria="convMicYouLabel">
             <svg class="mic-icon-svg" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
               <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
@@ -405,9 +405,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
-        <h2 class="overlay-title">Travel Tools</h2>
+        <h2 class="overlay-title" data-i18n="travelToolsTitle">Travel Tools</h2>
         <div style="width: 60px;"></div>
       </header>
 
@@ -421,8 +421,8 @@
             </svg>
           </div>
           <div class="tool-menu-text">
-            <span class="tool-menu-title">Konverter Satuan</span>
-            <span class="tool-menu-subtitle">Jarak, suhu, berat</span>
+            <span class="tool-menu-title" data-i18n="unitConverterTitle">Konverter Satuan</span>
+            <span class="tool-menu-subtitle" data-i18n="unitConverterSubtitle">Jarak, suhu, berat</span>
           </div>
           <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
@@ -437,8 +437,8 @@
             </svg>
           </div>
           <div class="tool-menu-text">
-            <span class="tool-menu-title">Info Tipping</span>
-            <span class="tool-menu-subtitle">Kebiasaan tip per negara</span>
+            <span class="tool-menu-title" data-i18n="tippingInfoTitle">Info Tipping</span>
+            <span class="tool-menu-subtitle" data-i18n="tippingInfoSubtitle">Kebiasaan tip per negara</span>
           </div>
           <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
@@ -454,8 +454,8 @@
             </svg>
           </div>
           <div class="tool-menu-text">
-            <span class="tool-menu-title">Kalkulator Mata Uang</span>
-            <span class="tool-menu-subtitle">Kurs real-time</span>
+            <span class="tool-menu-title" data-i18n="currencyCalcTitle">Kalkulator Mata Uang</span>
+            <span class="tool-menu-subtitle" data-i18n="currencyCalcSubtitle">Kurs real-time</span>
           </div>
           <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
@@ -471,8 +471,25 @@
             </svg>
           </div>
           <div class="tool-menu-text">
-            <span class="tool-menu-title">Frasa Darurat</span>
-            <span class="tool-menu-subtitle">Offline, 30+ bahasa</span>
+            <span class="tool-menu-title" data-i18n="emergencyPhrasesTitle">Frasa Darurat</span>
+            <span class="tool-menu-subtitle" data-i18n="emergencyPhrasesSubtitle">Offline, 30+ bahasa</span>
+          </div>
+          <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+
+        <button class="tool-menu-item" id="openAppLanguageBtn">
+          <div class="tool-menu-icon" style="background-color: #34a853;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <div class="tool-menu-text">
+            <span class="tool-menu-title" data-i18n="appLanguageTitle">Bahasa Aplikasi</span>
+            <span class="tool-menu-subtitle" data-i18n="appLanguageSubtitle">Ubah bahasa tampilan</span>
           </div>
           <svg class="tool-menu-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"/>
@@ -488,17 +505,17 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
-        <h2 class="overlay-title">Konverter Satuan</h2>
+        <h2 class="overlay-title" data-i18n="unitConverterTitle">Konverter Satuan</h2>
         <div style="width: 60px;"></div>
       </header>
 
       <div class="segmented-control-container">
         <div class="segmented-control" id="unitCategoryTabs">
-          <button class="segment-btn active" data-category="distance">Jarak</button>
-          <button class="segment-btn" data-category="temperature">Suhu</button>
-          <button class="segment-btn" data-category="weight">Berat</button>
+          <button class="segment-btn active" data-category="distance" data-i18n="distanceTab">Jarak</button>
+          <button class="segment-btn" data-category="temperature" data-i18n="temperatureTab">Suhu</button>
+          <button class="segment-btn" data-category="weight" data-i18n="weightTab">Berat</button>
         </div>
       </div>
 
@@ -539,9 +556,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
-        <h2 class="overlay-title">Info Tipping</h2>
+        <h2 class="overlay-title" data-i18n="tippingInfoTitle">Info Tipping</h2>
         <div style="width: 60px;"></div>
       </header>
 
@@ -551,7 +568,7 @@
             <circle cx="11" cy="11" r="8"/>
             <path d="m21 21-4.3-4.3"/>
           </svg>
-          <input type="text" class="search-input" id="tippingSearchInput" placeholder="Cari negara..." autocomplete="off" />
+          <input type="text" class="search-input" id="tippingSearchInput" placeholder="Cari negara..." data-i18n-placeholder="tippingSearchPlaceholder" autocomplete="off" />
         </div>
       </div>
 
@@ -567,9 +584,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
-        <h2 class="overlay-title">Kalkulator Mata Uang</h2>
+        <h2 class="overlay-title" data-i18n="currencyCalcTitle">Kalkulator Mata Uang</h2>
         <div style="width: 60px;"></div>
       </header>
 
@@ -600,7 +617,7 @@
             </button>
           </div>
 
-          <div class="currency-rate-info" id="currencyRateInfo">Memuat kurs...</div>
+          <div class="currency-rate-info" id="currencyRateInfo" data-i18n="loadingRates">Memuat kurs...</div>
         </div>
       </div>
     </div>
@@ -612,9 +629,9 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Kembali
+          <span data-i18n="backBtnText">Kembali</span>
         </button>
-        <h2 class="overlay-title">Frasa Darurat</h2>
+        <h2 class="overlay-title" data-i18n="emergencyPhrasesTitle">Frasa Darurat</h2>
         <div style="width: 60px;"></div>
       </header>
 
@@ -630,14 +647,14 @@
           <!-- Diisi dinamis oleh JS -->
         </div>
 
-        <div class="emergency-disclaimer">Terjemahan otomatis — untuk situasi darurat yang serius, tetap usahakan bantuan dari penerjemah manusia atau layanan resmi.</div>
+        <div class="emergency-disclaimer" data-i18n="emergencyDisclaimer">Terjemahan otomatis — untuk situasi darurat yang serius, tetap usahakan bantuan dari penerjemah manusia atau layanan resmi.</div>
       </div>
     </div>
 
     <!-- ==================== SCREEN: TUNJUKKAN KE LOKAL (FULLSCREEN) ==================== -->
     <div class="show-to-local-screen" id="showToLocalOverlay">
       <div class="show-to-local-text" id="showToLocalText"></div>
-      <div class="show-to-local-hint">Ketuk di mana saja untuk kembali</div>
+      <div class="show-to-local-hint" data-i18n="showToLocalHint">Ketuk di mana saja untuk kembali</div>
     </div>
 
     <!-- ==================== GLOBAL FLOATING TOAST ==================== -->
