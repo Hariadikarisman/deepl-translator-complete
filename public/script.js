@@ -104,7 +104,60 @@
       loadingRates: 'Memuat kurs...',
       emergencyDisclaimer: 'Terjemahan otomatis — untuk situasi darurat yang serius, tetap usahakan bantuan dari penerjemah manusia atau layanan resmi.',
       showToLocalHint: 'Ketuk di mana saja untuk kembali',
-      offlineBannerText: 'Offline — translate baru tidak tersedia, riwayat tetap bisa dibuka'
+      offlineBannerText: 'Offline — translate baru tidak tersedia, riwayat tetap bisa dibuka',
+      toastLangSwapped: 'Bahasa ditukar',
+      toastTtsLangUnsupported: 'Bahasa ini tidak didukung untuk pemutar suara.',
+      toastSttLangUnsupported: 'Bahasa perekaman tidak didukung di perangkat ini.',
+      toastTtsNotSupported: 'Browser Anda tidak mendukung pemutar suara',
+      toastSttNotSupported: 'Browser Anda tidak mendukung perekaman suara',
+      toastConvOffline: 'Conversation mode butuh koneksi internet.',
+      toastSavedFavorite: 'Disimpan ke Favorit',
+      toastRemovedFavorite: 'Dihapus dari Favorit',
+      toastFavoriteUpdated: 'Favorit diperbarui',
+      toastCameraAppOnly: 'Fitur kamera hanya tersedia di aplikasi (bukan browser).',
+      toastPhotoProcessFailed: 'Gagal memproses foto.',
+      toastSttStartFailed: 'Gagal memulai perekaman suara.',
+      toastCopyFailed: 'Gagal menyalin teks',
+      toastBackOnline: 'Koneksi kembali tersambung',
+      toastStillProcessing: 'Masih memproses permintaan sebelumnya, tunggu sebentar...',
+      toastPlayingSound: 'Memutar suara...',
+      toastListening: 'Mendengarkan...',
+      toastOfflineFromHistory: 'Offline — menampilkan dari riwayat tersimpan',
+      toastWorkspaceCleared: 'Papan ketik dibersihkan',
+      toastTtsDeviceNotSupported: 'Pemutar suara tidak didukung oleh perangkat ini.',
+      toastSttDeviceNotSupported: 'Perangkat ini tidak mendukung perekaman suara.',
+      toastHistoryDeleted: 'Riwayat dihapus',
+      toastAllHistoryCleared: 'Seluruh riwayat dibersihkan',
+      toastVoiceRecorded: 'Suara terekam!',
+      toastTextCopied: 'Teks disalin ke papan klip!',
+      toastTranslationLoaded: 'Terjemahan dimuat!',
+      toastNoTextForFavorite: 'Tidak ada teks untuk difavoritkan',
+      toastNoTextToPlay: 'Tidak ada teks untuk diputar',
+      toastNoTextToCopy: 'Tidak ada teks untuk disalin',
+      toastNoTextToShow: 'Tidak ada teks untuk ditampilkan',
+      toastNoTextInPhoto: 'Tidak ada teks yang terbaca dari foto ini. Coba foto yang lebih jelas.',
+      toastCantSwapAuto: 'Tidak dapat menukar dengan Deteksi Otomatis',
+      toastImagePhotoOffline: 'Translate foto butuh koneksi internet.',
+      toastGetPhotoFailedPrefix: 'Gagal mengambil foto: ',
+      toastImageTranslateFailedPrefix: 'Gagal menerjemahkan foto: ',
+      toastUnknownError: 'unknown error',
+      toastGenericError: 'Terjadi kesalahan.',
+      toastRecordFailedPrefix: 'Gagal merekam suara: ',
+      toastErrorPrefix: 'Kesalahan: ',
+      noOfflineTranslation: 'Tidak ada koneksi internet. Kalimat ini belum pernah diterjemahkan sebelumnya, jadi tidak tersedia offline.',
+      translationFailedText: 'Terjemahan gagal',
+      countryNotFound: 'Negara tidak ditemukan',
+      needInternetForRates: 'Butuh koneksi internet untuk mengambil kurs terbaru.',
+      rateFetchFailed: 'Gagal mengambil kurs. Coba lagi nanti.',
+      notFoundGeneric: 'Tidak ditemukan',
+      confirmClearHistory: 'Hapus seluruh riwayat terjemahan?',
+      imageStatusUnread: 'Tidak terbaca',
+      imageStatusFailed: 'Gagal',
+      imageStatusUnknown: 'Tidak diketahui',
+      historyEmptyTitle: 'Tidak ada hasil ditemukan',
+      historyEmptySubtitle: 'Cari kata atau terjemahan lainnya',
+      emergencyTranslateFailed: 'Gagal menerjemahkan',
+      convTranslateFailedPrefix: 'Gagal menerjemahkan: '
     },
     en: {
       appTitle: 'Haka Translator',
@@ -158,7 +211,60 @@
       loadingRates: 'Loading rates...',
       emergencyDisclaimer: 'Automatic translation — for serious emergencies, still seek help from a human interpreter or official service.',
       showToLocalHint: 'Tap anywhere to return',
-      offlineBannerText: 'Offline — new translations unavailable, history still accessible'
+      offlineBannerText: 'Offline — new translations unavailable, history still accessible',
+      toastLangSwapped: 'Languages swapped',
+      toastTtsLangUnsupported: 'This language is not supported for playback.',
+      toastSttLangUnsupported: 'This language is not supported for voice recording on this device.',
+      toastTtsNotSupported: 'Your browser does not support audio playback',
+      toastSttNotSupported: 'Your browser does not support voice recording',
+      toastConvOffline: 'Conversation mode requires an internet connection.',
+      toastSavedFavorite: 'Saved to Favorites',
+      toastRemovedFavorite: 'Removed from Favorites',
+      toastFavoriteUpdated: 'Favorite updated',
+      toastCameraAppOnly: 'Camera feature is only available in the app (not in browser).',
+      toastPhotoProcessFailed: 'Failed to process photo.',
+      toastSttStartFailed: 'Failed to start voice recording.',
+      toastCopyFailed: 'Failed to copy text',
+      toastBackOnline: 'Connection restored',
+      toastStillProcessing: 'Still processing the previous request, please wait...',
+      toastPlayingSound: 'Playing audio...',
+      toastListening: 'Listening...',
+      toastOfflineFromHistory: 'Offline — showing from saved history',
+      toastWorkspaceCleared: 'Workspace cleared',
+      toastTtsDeviceNotSupported: 'Audio playback is not supported on this device.',
+      toastSttDeviceNotSupported: 'This device does not support voice recording.',
+      toastHistoryDeleted: 'History deleted',
+      toastAllHistoryCleared: 'All history cleared',
+      toastVoiceRecorded: 'Voice recorded!',
+      toastTextCopied: 'Text copied to clipboard!',
+      toastTranslationLoaded: 'Translation loaded!',
+      toastNoTextForFavorite: 'No text to favorite',
+      toastNoTextToPlay: 'No text to play',
+      toastNoTextToCopy: 'No text to copy',
+      toastNoTextToShow: 'No text to display',
+      toastNoTextInPhoto: 'No text could be read from this photo. Try a clearer photo.',
+      toastCantSwapAuto: 'Cannot swap with Auto Detect',
+      toastImagePhotoOffline: 'Photo translation requires an internet connection.',
+      toastGetPhotoFailedPrefix: 'Failed to get photo: ',
+      toastImageTranslateFailedPrefix: 'Failed to translate photo: ',
+      toastUnknownError: 'unknown error',
+      toastGenericError: 'An error occurred.',
+      toastRecordFailedPrefix: 'Failed to record voice: ',
+      toastErrorPrefix: 'Error: ',
+      noOfflineTranslation: 'No internet connection. This sentence has never been translated before, so it is not available offline.',
+      translationFailedText: 'Translation failed',
+      countryNotFound: 'Country not found',
+      needInternetForRates: 'Internet connection is required to fetch the latest exchange rates.',
+      rateFetchFailed: 'Failed to fetch exchange rates. Try again later.',
+      notFoundGeneric: 'Not found',
+      confirmClearHistory: 'Delete all translation history?',
+      imageStatusUnread: 'Not readable',
+      imageStatusFailed: 'Failed',
+      imageStatusUnknown: 'Unknown',
+      historyEmptyTitle: 'No results found',
+      historyEmptySubtitle: 'Try another word or translation',
+      emergencyTranslateFailed: 'Translation failed',
+      convTranslateFailedPrefix: 'Translation failed: '
     },
     zh: {
       appTitle: 'Haka 翻译',
@@ -212,7 +318,60 @@
       loadingRates: '加载汇率中...',
       emergencyDisclaimer: '自动翻译 — 遇到严重紧急情况时，仍应寻求人工翻译或官方服务的帮助。',
       showToLocalHint: '点击任意位置返回',
-      offlineBannerText: '离线中 — 无法进行新的翻译，仍可查看历史记录'
+      offlineBannerText: '离线中 — 无法进行新的翻译，仍可查看历史记录',
+      toastLangSwapped: '语言已交换',
+      toastTtsLangUnsupported: '此语言不支持朗读播放。',
+      toastSttLangUnsupported: '此设备不支持该语言的语音录制。',
+      toastTtsNotSupported: '您的浏览器不支持语音播放',
+      toastSttNotSupported: '您的浏览器不支持语音录制',
+      toastConvOffline: '对话模式需要网络连接。',
+      toastSavedFavorite: '已收藏',
+      toastRemovedFavorite: '已取消收藏',
+      toastFavoriteUpdated: '收藏已更新',
+      toastCameraAppOnly: '相机功能仅在应用内可用（浏览器不支持）。',
+      toastPhotoProcessFailed: '处理照片失败。',
+      toastSttStartFailed: '无法开始录音。',
+      toastCopyFailed: '复制文字失败',
+      toastBackOnline: '网络已恢复',
+      toastStillProcessing: '仍在处理上一个请求，请稍候...',
+      toastPlayingSound: '正在播放...',
+      toastListening: '正在聆听...',
+      toastOfflineFromHistory: '离线中 — 显示已保存的历史记录',
+      toastWorkspaceCleared: '工作区已清空',
+      toastTtsDeviceNotSupported: '此设备不支持语音播放。',
+      toastSttDeviceNotSupported: '此设备不支持语音录制。',
+      toastHistoryDeleted: '历史记录已删除',
+      toastAllHistoryCleared: '所有历史记录已清空',
+      toastVoiceRecorded: '语音已录制！',
+      toastTextCopied: '文字已复制到剪贴板！',
+      toastTranslationLoaded: '翻译已载入！',
+      toastNoTextForFavorite: '没有可收藏的文字',
+      toastNoTextToPlay: '没有可播放的文字',
+      toastNoTextToCopy: '没有可复制的文字',
+      toastNoTextToShow: '没有可显示的文字',
+      toastNoTextInPhoto: '无法从此照片读取文字，请尝试更清晰的照片。',
+      toastCantSwapAuto: '无法与自动检测交换',
+      toastImagePhotoOffline: '照片翻译需要网络连接。',
+      toastGetPhotoFailedPrefix: '获取照片失败：',
+      toastImageTranslateFailedPrefix: '照片翻译失败：',
+      toastUnknownError: '未知错误',
+      toastGenericError: '发生错误。',
+      toastRecordFailedPrefix: '录音失败：',
+      toastErrorPrefix: '错误：',
+      noOfflineTranslation: '没有网络连接。这句话之前从未翻译过，因此无法离线使用。',
+      translationFailedText: '翻译失败',
+      countryNotFound: '未找到该国家',
+      needInternetForRates: '需要网络连接才能获取最新汇率。',
+      rateFetchFailed: '获取汇率失败，请稍后再试。',
+      notFoundGeneric: '未找到',
+      confirmClearHistory: '删除所有翻译历史记录？',
+      imageStatusUnread: '无法读取',
+      imageStatusFailed: '失败',
+      imageStatusUnknown: '未知',
+      historyEmptyTitle: '未找到结果',
+      historyEmptySubtitle: '尝试搜索其他词语或翻译',
+      emergencyTranslateFailed: '翻译失败',
+      convTranslateFailedPrefix: '翻译失败：'
     }
   };
 
@@ -597,13 +756,13 @@ function findCachedTranslation(text, srcLangCode, tgtLangCode) {
         targetTextEl.textContent = cached.translated;
         adjustFontSize(targetTextEl, cached.translated);
         updateRomanizationDisplay(cached.romanization || '');
-        showToast('Offline — menampilkan dari riwayat tersimpan');
+        showToast(t('toastOfflineFromHistory'));
         isTranslating = false;
         updateFavoriteBtnState();
         return;
       }
 
-      targetTextEl.textContent = 'Tidak ada koneksi internet. Kalimat ini belum pernah diterjemahkan sebelumnya, jadi tidak tersedia offline.';
+      targetTextEl.textContent = t('noOfflineTranslation');
       updateRomanizationDisplay('');
       isTranslating = false;
       updateFavoriteBtnState();
@@ -663,7 +822,7 @@ function findCachedTranslation(text, srcLangCode, tgtLangCode) {
           }
         }
       } else {
-        targetTextEl.textContent = 'Translation failed';
+        targetTextEl.textContent = t('translationFailedText');
         updateRomanizationDisplay('');
       }
     } catch (e) {
@@ -690,14 +849,14 @@ function findCachedTranslation(text, srcLangCode, tgtLangCode) {
   // ---- TRANSLATE DARI FOTO (KAMERA / GALERI) ----
 async function handleCameraTranslate() {
   if (!navigator.onLine) {
-    showToast('Translate foto butuh koneksi internet.');
+    showToast(t('toastImagePhotoOffline'));
     return;
   }
 
   const CameraPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
 
   if (!CameraPlugin) {
-    showToast('Fitur kamera hanya tersedia di aplikasi (bukan browser).');
+    showToast(t('toastCameraAppOnly'));
     return;
   }
 
@@ -726,13 +885,13 @@ async function handleCameraTranslate() {
     }
     console.error('Camera getPhoto error (raw):', rawDetail, err);
     if (msg.toLowerCase().indexOf('cancel') === -1) {
-      showToast('Gagal mengambil foto: ' + (rawDetail || 'unknown error'));
+      showToast(t('toastGetPhotoFailedPrefix') + (rawDetail || t('toastUnknownError')));
     }
     return;
   }
 
   if (!photo || !photo.base64String) {
-    showToast('Gagal memproses foto.');
+    showToast(t('toastPhotoProcessFailed'));
     return;
   }
 
@@ -745,7 +904,7 @@ function openImageResultScreen(photo) {
   imageTranslateCache = {}; // Foto baru = cache lama tidak relevan lagi
 
   imageResultPhoto.src = 'data:image/' + (photo.format || 'jpeg') + ';base64,' + photo.base64String;
-  imageSourceLangName.textContent = 'Mendeteksi...';
+  imageSourceLangName.textContent = t('imageDetecting');
   imageTargetLangName.textContent = getLangByCode(imageTranslateTargetLang).name;
 
   imageResultViewport.querySelectorAll('.image-overlay-label').forEach(el => el.remove());
@@ -760,7 +919,7 @@ function closeImageResultScreen() {
 
 async function runImageTranslation(photo, targetLangCode) {
   if (isImageTranslating) {
-    showToast('Masih memproses permintaan sebelumnya, tunggu sebentar...');
+    showToast(t('toastStillProcessing'));
     return;
   }
 
@@ -809,12 +968,12 @@ async function runImageTranslation(photo, targetLangCode) {
     }
 
     if (!data.blocks || !data.blocks.length) {
-      showToast('Tidak ada teks yang terbaca dari foto ini. Coba foto yang lebih jelas.');
-      imageSourceLangName.textContent = 'Tidak terbaca';
+      showToast(t('toastNoTextInPhoto'));
+      imageSourceLangName.textContent = t('imageStatusUnread');
       return;
     }
 
-    imageSourceLangName.textContent = data.detectedLanguage || 'Tidak diketahui';
+    imageSourceLangName.textContent = data.detectedLanguage || t('imageStatusUnknown');
     renderImageOverlayLabels(data.blocks);
 
     // Simpan ke cache supaya kalau user balik lagi ke bahasa ini, tidak perlu panggil API lagi
@@ -837,8 +996,8 @@ async function runImageTranslation(photo, targetLangCode) {
     saveHistoryToStorage();
   } catch (e) {
     console.error('Camera translate error:', e);
-    showToast('Gagal menerjemahkan foto: ' + (e.message || 'Terjadi kesalahan.'));
-    imageSourceLangName.textContent = 'Gagal';
+    showToast(t('toastImageTranslateFailedPrefix') + (e.message || t('toastGenericError')));
+    imageSourceLangName.textContent = t('imageStatusFailed');
   } finally {
     isImageTranslating = false;
     imageTargetLangPill.classList.remove('is-processing');
@@ -886,7 +1045,7 @@ function updateConvLangPills() {
 }
 
 function resetConvDisplay(displayEl) {
-  displayEl.innerHTML = '<span class="conv-placeholder">Ketuk mic untuk bicara</span>';
+  displayEl.innerHTML = '<span class="conv-placeholder">' + t('convPlaceholder') + '</span>';
 }
 
 function openConversationMode() {
@@ -910,7 +1069,7 @@ function handleConvSwap() {
   updateConvLangPills();
   resetConvDisplay(convDisplayA);
   resetConvDisplay(convDisplayB);
-  showToast('Bahasa ditukar');
+  showToast(t('toastLangSwapped'));
 }
 
 function stopConvListening() {
@@ -926,7 +1085,7 @@ function stopConvListening() {
 
 function startConvListening(side) {
   if (!navigator.onLine) {
-    showToast('Conversation mode butuh koneksi internet.');
+    showToast(t('toastConvOffline'));
     return;
   }
 
@@ -938,7 +1097,7 @@ function startConvListening(side) {
 
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
-    showToast('Perangkat ini tidak mendukung perekaman suara.');
+    showToast(t('toastSttDeviceNotSupported'));
     return;
   }
 
@@ -967,7 +1126,7 @@ function startConvListening(side) {
   rec.onerror = function (err) {
     console.error('Conversation STT error:', err.error);
     if (err.error !== 'no-speech' && err.error !== 'aborted') {
-      showToast('Gagal merekam suara: ' + err.error);
+      showToast(t('toastRecordFailedPrefix') + err.error);
     }
     stopConvListening();
   };
@@ -982,7 +1141,7 @@ function startConvListening(side) {
     rec.start();
   } catch (startErr) {
     console.error('Conversation STT start failed:', startErr);
-    showToast('Gagal memulai perekaman suara.');
+    showToast(t('toastSttStartFailed'));
     stopConvListening();
   }
 }
@@ -1028,11 +1187,11 @@ async function translateConvUtterance(speakingSide, transcript) {
       translatedSpan.textContent = data.translation;
       adjustFontSize(translatedSpan, data.translation);
     } else {
-      otherDisplay.innerHTML = '<span class="conv-placeholder">Gagal menerjemahkan</span>';
+      otherDisplay.innerHTML = '<span class="conv-placeholder">' + t('emergencyTranslateFailed') + '</span>';
     }
   } catch (e) {
     console.error('Conversation translate error:', e);
-    otherDisplay.innerHTML = '<span class="conv-placeholder">Gagal menerjemahkan: ' + (e.message || 'error') + '</span>';
+    otherDisplay.innerHTML = '<span class="conv-placeholder">' + t('convTranslateFailedPrefix') + (e.message || 'error') + '</span>';
   }
 }
 
@@ -1204,7 +1363,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       emptyDiv.style.padding = '32px 16px';
       emptyDiv.style.color = 'rgba(255,255,255,0.35)';
       emptyDiv.style.fontSize = '14px';
-      emptyDiv.textContent = 'Negara tidak ditemukan';
+      emptyDiv.textContent = t('countryNotFound');
       tippingListContainer.appendChild(emptyDiv);
       return;
     }
@@ -1233,7 +1392,7 @@ async function translateConvUtterance(speakingSide, transcript) {
   function handleShowToLocal() {
     const text = targetTextEl.textContent.trim();
     if (!text || targetTextEl.classList.contains('translation-placeholder') || isTranslating) {
-      showToast('Tidak ada teks untuk ditampilkan');
+      showToast(t('toastNoTextToShow'));
       return;
     }
     showFullscreenText(text);
@@ -1338,10 +1497,10 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   async function openCurrencyCalculator() {
     currencyCalcOverlay.classList.add('active');
-    currencyRateInfo.textContent = 'Memuat kurs...';
+    currencyRateInfo.textContent = t('loadingRates');
 
     if (!navigator.onLine) {
-      currencyRateInfo.textContent = 'Butuh koneksi internet untuk mengambil kurs terbaru.';
+      currencyRateInfo.textContent = t('needInternetForRates');
       return;
     }
 
@@ -1351,7 +1510,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       recalculateCurrencyFromInput();
     } catch (e) {
       console.error('Currency rate fetch error:', e);
-      currencyRateInfo.textContent = 'Gagal mengambil kurs. Coba lagi nanti.';
+      currencyRateInfo.textContent = t('rateFetchFailed');
     }
   }
 
@@ -1501,7 +1660,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       rec.onstart = function () {
         isListening = true;
         voiceInputBtn.classList.add('listening-active');
-        showToast('Mendengarkan...');
+        showToast(t('toastListening'));
       };
 
       rec.onresult = function (event) {
@@ -1510,14 +1669,14 @@ async function translateConvUtterance(speakingSide, transcript) {
           sourceTextEl.value = transcript;
           adjustFontSize(sourceTextEl, transcript);
           updateClearButtonVisibility();
-          showToast('Suara terekam!');
+          showToast(t('toastVoiceRecorded'));
           performTranslation(transcript, true);
         }
       };
 
       rec.onerror = function (err) {
         console.error('STT Voice error:', err.error);
-        showToast(`Kesalahan: ${err.error}`);
+        showToast(t('toastErrorPrefix') + err.error);
         stopSpeechRecognition();
       };
 
@@ -1568,7 +1727,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       }
 
       if (!speechRecognitionInstance) {
-        showToast('Browser Anda tidak mendukung perekaman suara');
+        showToast(t('toastSttNotSupported'));
         return;
       }
 
@@ -1598,14 +1757,14 @@ async function translateConvUtterance(speakingSide, transcript) {
             speechRecognitionInstance.start();
           } catch (retryErr) {
             console.error('STT fallback failed:', retryErr);
-            showToast('Bahasa perekaman tidak didukung di perangkat ini.');
+            showToast(t('toastSttLangUnsupported'));
             stopSpeechRecognition();
           }
         }
       }
     } catch (e) {
       console.error('STT activation error:', e);
-      showToast('Gagal memulai perekaman suara.');
+      showToast(t('toastSttStartFailed'));
       stopSpeechRecognition();
     }
   }
@@ -1614,12 +1773,12 @@ async function translateConvUtterance(speakingSide, transcript) {
   let activeSynthesisUtterance = null;
   function speakSentence(text, langCode, isSourceCard) {
     if (!text || !text.trim() || text === t('resultPlaceholder') || text === t('translating')) {
-      showToast('Tidak ada teks untuk diputar');
+      showToast(t('toastNoTextToPlay'));
       return;
     }
 
     if (!('speechSynthesis' in window)) {
-      showToast('Browser Anda tidak mendukung pemutar suara');
+      showToast(t('toastTtsNotSupported'));
       return;
     }
 
@@ -1661,22 +1820,22 @@ async function translateConvUtterance(speakingSide, transcript) {
 
       try {
         window.speechSynthesis.speak(utterance);
-        showToast('Memutar suara...');
+        showToast(t('toastPlayingSound'));
       } catch (speakErr) {
         console.error('SpeechSynthesis speak failed:', speakErr);
         try {
           utterance.lang = 'en-US';
           window.speechSynthesis.speak(utterance);
-          showToast('Memutar suara...');
+          showToast(t('toastPlayingSound'));
         } catch (retrySpeakErr) {
           console.error('SpeechSynthesis fallback speak failed:', retrySpeakErr);
-          showToast('Bahasa ini tidak didukung untuk pemutar suara.');
+          showToast(t('toastTtsLangUnsupported'));
           activeSynthesisUtterance = null;
         }
       }
     } catch (e) {
       console.error('TTS error:', e);
-      showToast('Pemutar suara tidak didukung oleh perangkat ini.');
+      showToast(t('toastTtsDeviceNotSupported'));
       activeSynthesisUtterance = null;
     }
   }
@@ -1684,16 +1843,16 @@ async function translateConvUtterance(speakingSide, transcript) {
   // ---- CLIPBOARD COPY UTILS ----
   async function copyTextToClipboard(text) {
     if (!text || !text.trim() || text === t('resultPlaceholder')) {
-      showToast('Tidak ada teks untuk disalin');
+      showToast(t('toastNoTextToCopy'));
       return;
     }
 
     try {
       await navigator.clipboard.writeText(text);
-      showToast('Teks disalin ke papan klip!');
+      showToast(t('toastTextCopied'));
     } catch (e) {
       console.error('Clipboard write error:', e);
-      showToast('Gagal menyalin teks');
+      showToast(t('toastCopyFailed'));
     }
   }
 
@@ -1778,7 +1937,7 @@ async function translateConvUtterance(speakingSide, transcript) {
       emptyDiv.style.padding = '32px 16px';
       emptyDiv.style.color = 'rgba(255,255,255,0.35)';
       emptyDiv.style.fontSize = '14px';
-      emptyDiv.textContent = 'Tidak ditemukan';
+      emptyDiv.textContent = t('notFoundGeneric');
       languageListContainer.appendChild(emptyDiv);
       return;
     }
@@ -1923,8 +2082,8 @@ async function translateConvUtterance(speakingSide, transcript) {
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
             </svg>
           </div>
-          <p class="empty-state-title">Tidak ada hasil ditemukan</p>
-          <p class="empty-state-subtitle">Cari kata atau terjemahan lainnya</p>
+          <p class="empty-state-title">${t('historyEmptyTitle')}</p>
+          <p class="empty-state-subtitle">${t('historyEmptySubtitle')}</p>
         </div>
       `;
       return;
@@ -1979,7 +2138,7 @@ async function translateConvUtterance(speakingSide, transcript) {
         
         updateLangPills();
         historyOverlay.classList.remove('active');
-        showToast('Terjemahan dimuat!');
+        showToast(t('toastTranslationLoaded'));
       });
 
       // Favorite toggle click
@@ -2010,7 +2169,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     saveHistoryToStorage();
     renderHistoryItems();
     updateFavoriteBtnState();
-    showToast('Favorit diperbarui');
+    showToast(t('toastFavoriteUpdated'));
   }
 
   function deleteHistoryItem(id) {
@@ -2018,16 +2177,16 @@ async function translateConvUtterance(speakingSide, transcript) {
     saveHistoryToStorage();
     renderHistoryItems();
     updateFavoriteBtnState();
-    showToast('Riwayat dihapus');
+    showToast(t('toastHistoryDeleted'));
   }
 
   function clearAllHistory() {
-    if (confirm('Hapus seluruh riwayat terjemahan?')) {
+    if (confirm(t('confirmClearHistory'))) {
       historyList = [];
       saveHistoryToStorage();
       renderHistoryItems();
       updateFavoriteBtnState();
-      showToast('Seluruh riwayat dibersihkan');
+      showToast(t('toastAllHistoryCleared'));
     }
   }
 
@@ -2037,7 +2196,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     const tgtText = targetTextEl.textContent.trim();
 
     if (!srcText || !tgtText || targetTextEl.classList.contains('translation-placeholder') || isTranslating) {
-      showToast('Tidak ada teks untuk difavoritkan');
+      showToast(t('toastNoTextForFavorite'));
       return;
     }
 
@@ -2050,7 +2209,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     if (existingIndex > -1) {
       // Toggle existing
       historyList[existingIndex].favorite = !historyList[existingIndex].favorite;
-      showToast(historyList[existingIndex].favorite ? 'Disimpan ke Favorit' : 'Dihapus dari Favorit');
+      showToast(historyList[existingIndex].favorite ? t('toastSavedFavorite') : t('toastRemovedFavorite'));
     } else {
       // Add as favorite directly
       const newItem = {
@@ -2064,7 +2223,7 @@ async function translateConvUtterance(speakingSide, transcript) {
         favorite: true
       };
       historyList.unshift(newItem);
-      showToast('Disimpan ke Favorit');
+      showToast(t('toastSavedFavorite'));
     }
 
     saveHistoryToStorage();
@@ -2073,7 +2232,7 @@ async function translateConvUtterance(speakingSide, transcript) {
 
   function handleLanguageSwap() {
     if (sourceLang === 'AUTO') {
-      showToast('Tidak dapat menukar dengan Deteksi Otomatis');
+      showToast(t('toastCantSwapAuto'));
       return;
     }
 
@@ -2099,7 +2258,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     updateClearButtonVisibility();
 
     updateLangPills();
-    showToast('Bahasa ditukar');
+    showToast(t('toastLangSwapped'));
     
     // Trigger translation for swapped text
     if (sourceTextEl.value.trim()) {
@@ -2118,7 +2277,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     updateClearButtonVisibility();
     
     updateFavoriteBtnState();
-    showToast('Papan ketik dibersihkan');
+    showToast(t('toastWorkspaceCleared'));
     sourceTextEl.focus();
   }
 
@@ -2132,7 +2291,7 @@ async function translateConvUtterance(speakingSide, transcript) {
     updateOnlineStatus();
     window.addEventListener('online', function () {
       updateOnlineStatus();
-      showToast('Koneksi kembali tersambung');
+      showToast(t('toastBackOnline'));
     });
     window.addEventListener('offline', updateOnlineStatus);
 

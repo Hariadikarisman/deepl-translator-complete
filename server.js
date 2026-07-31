@@ -197,28 +197,43 @@ const LANGUAGE_NAMES = {
   TH: 'Thai', VI: 'Vietnamese', HI: 'Hindi'
 };
 
+// Helper: panggil Gemini API dengan retry otomatis kalau server-nya lagi sibuk (503)
+// atau ada error jaringan sesaat. Exponential backoff: coba lagi setelah 1s, lalu 2s.
+// Tidak retry untuk 401 (key salah) atau 429 (kuota habis) — itu tidak akan
+// membaik cuma dengan diulang, jadi langsung dilempar sebagai error ke user.
 async function fetchGeminiWithRetry(url, options, maxRetries = 2) {
   let lastError;
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const response = await fetch(url, options);
-      if (response.ok) return response;
+
+      if (response.ok) {
+        return response;
+      }
+
+      // 503 = server Gemini sedang overload secara global, ini transient — layak diulang
       if (response.status === 503 && attempt < maxRetries) {
-        const waitMs = (attempt + 1) * 1000;
+        const waitMs = (attempt + 1) * 1000; // 1s, lalu 2s
         console.log(`⏳ Gemini 503 (server sibuk), retry ke-${attempt + 1} setelah ${waitMs}ms...`);
         await new Promise(resolve => setTimeout(resolve, waitMs));
         continue;
       }
+
+      // Error lain (401, 429, 400, dst) — tidak ada gunanya diulang, langsung kembalikan
       return response;
     } catch (networkErr) {
+      // Error jaringan murni (bukan response dari server) — juga layak diulang sesekali
       lastError = networkErr;
       if (attempt < maxRetries) {
         const waitMs = (attempt + 1) * 1000;
+        console.log(`⏳ Gemini network error, retry ke-${attempt + 1} setelah ${waitMs}ms...`, networkErr.message);
         await new Promise(resolve => setTimeout(resolve, waitMs));
         continue;
       }
     }
   }
+
   throw lastError || new Error("Gagal menghubungi Gemini API setelah beberapa percobaan.");
 }
 
